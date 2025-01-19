@@ -3,9 +3,13 @@ module:
   imports:
     - path: github.com/imfing/hextra
 
+outputs:
+  home: [HTML]
+
 menu:
   main:
-    - name: Documentation
+    - name: Docs
+      identifier: docs
       pageRef: /docs
       weight: 1
     - name: About
@@ -28,12 +32,42 @@ markup:
 params:
   navbar:
     displayTitle: true
-    displayLogo: false
+    # displayLogo: true
+    # logo:
+    #   path: images/logo.svg
+    #   dark: images/logo-dark.svg
+    #   # width: 40
+    #   # height: 20
+    #   # link: /
+    # width: wide
+
+  theme:
+    # light | dark | system
+    default: system
+    displayToggle: true
 
   footer:
-    displayCopyright: false
-    displayPoweredBy: false
+    enable: false
+
+  # Search
+  # flexsearch is enabled by default
+  search:
+    enable: true
+    type: flexsearch
+
+    flexsearch:
+      # index page by: content | summary | heading | title
+      index: content
+      # full | forward | reverse | strict
+      # https://github.com/nextapps-de/flexsearch/#tokenizer-prefix-search
+      tokenize: forward
 
   editURL:
     enable: true
-    base: "https://github.com/imfing/hextra-starter-template/edit/main/content"
+    base: "https://github.com/Ivanhahanov/learnops/edit/main/docs/content"
+
+  highlight:
+    copy:
+      enable: true
+      # hover | always
+      display: hover
