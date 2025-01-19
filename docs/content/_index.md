@@ -1,7 +1,13 @@
 ---
-date: '2025-01-19T20:14:33+03:00'
-draft: true
-title: ''
+title: LearnOps
+toc: false
 ---
 
-hello
+## Explore
+
+{{< cards >}}
+  {{< card link="docs" title="Docs" icon="book-open" >}}
+  {{< card link="about" title="About" icon="user" >}}
+{{< /cards >}}
+
+## Documentation
