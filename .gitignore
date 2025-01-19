@@ -1,0 +1,5 @@
+.ssl/
+.terraform*
+.tofurc
+*.tf
+*.tf*

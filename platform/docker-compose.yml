@@ -1,0 +1,23 @@
+services:
+  ui:
+    build: ./frontend
+    image: explabs/platform-ui
+    environment:
+      - OIDC_ISSUER=https://keycloak.local/realms/master/
+      - OIDC_CLIENT_ID=kube
+    ports:
+      - 9000:80
+  api:
+    # KO_DOCKER_REPO=explabs/platform-server ko build ./cmd/server --bare
+    image: explabs/platform-server
+    volumes:
+      - ./kubeconfig.yml:/home/nonroot/.kube/config
+    ports:
+      - 8080:8080
+  
+  crdb:
+   image: cockroachdb/cockroach
+   ports:
+     - "26257:26257"
+     - "8081:8080"
+   command: start-single-node --insecure

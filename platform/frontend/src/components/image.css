@@ -1,0 +1,9 @@
+.small {
+    width: 150px;
+    transition: width 0.5s;
+  }
+  
+  .large {
+    width: 300px;
+    transition: width 0.5s;
+  }

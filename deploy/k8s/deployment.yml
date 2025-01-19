@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ui
+  labels:
+    app: ui
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ui
+  template:
+    metadata:
+      labels:
+        app: ui
+    spec:
+      containers:
+      - name: ui
+        image: explabs/platform-ui
+        ports:
+        - containerPort: 80
+        env:
+          - name: OIDC_ISSUER
+            value: https://auth.learnops.local/realms/master
+          - name: OIDC_CLIENT_ID
+            value: kube
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api
+  labels:
+    app: api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: api
+  template:
+    metadata:
+      labels:
+        app: api
+    spec:
+      serviceAccountName: api-sa
+      containers:
+      - name: api
+        image: explabs/platform-server
+        ports:
+        - containerPort: 8080
+        env:
+          - name: DATABASE_URL
+            value: "postgresql://root@cockroachdb:26257?sslmode=disable"
+          - name: OIDC_ISSUER
+            value: https://auth.learnops.local/realms/master
+          - name: OIDC_CLIENT_ID
+            value: kube
+          - name: DOMAIN
+            value: "learnops.local"
+          - name: CA_ISSUER
+            value: ca-issuer
