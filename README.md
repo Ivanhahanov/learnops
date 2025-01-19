@@ -58,7 +58,7 @@ The platform includes:
 
 2. Start the local environment:
    ```bash
-   ./setup.sh
+   ./demo.sh
    ```
 
 3. Follow the instructions provided by the script to access the platform.
@@ -77,12 +77,6 @@ The CLI tool allows you to interact with LearnOps directly from the command line
    ```bash
    learnops-cli courses list
    ```
-
-### Frontend
-Access the web interface to view courses, take lessons, and complete assignments.
-
-### API
-Use the REST API for programmatic access. Refer to the [API documentation](api/README.md) for details.
 
 ## Contributing
 We welcome contributions! To get started:
