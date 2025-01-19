@@ -1,6 +1,5 @@
 ---
-date: '2025-01-19T20:14:37+03:00'
-title: 'Installation'
+title: 'Admin Guide'
 toc: true
 ---
 ## Demo
