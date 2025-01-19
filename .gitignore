@@ -3,3 +3,8 @@
 .tofurc
 *.tf
 *.tf*
+
+# Hugo output
+public/
+resources/
+.hugo_build.lock
