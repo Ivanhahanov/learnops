@@ -7,7 +7,7 @@ module:
 menu:
   main:
     - name: Documentation
-      pageRef: /docs
+      pageRef: /documentation
       weight: 1
     - name: Blog
       pageRef: /blog
