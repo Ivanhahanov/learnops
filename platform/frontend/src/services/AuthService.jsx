@@ -1,7 +1,7 @@
 import { UserManager } from 'oidc-client-ts';
-import { dexConfig } from '../utils/config';
+import { oidcConfig } from '../utils/config';
 
-const userManager = new UserManager(dexConfig.settings);
+const userManager = new UserManager(oidcConfig.settings);
 
 export async function getUser() {
     const user = await userManager.getUser();
@@ -19,7 +19,7 @@ export async function handleOAuthCallback(callbackUrl) {
         const user = await userManager.signinRedirectCallback(callbackUrl);
         console.log(user)
         return user;
-    } catch(e) {
+    } catch (e) {
         alert(e);
         console.log(`error while handling oauth callback: ${e}`);
     }

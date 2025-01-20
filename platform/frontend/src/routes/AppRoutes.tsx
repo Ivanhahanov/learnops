@@ -5,10 +5,8 @@ import TaskPage from "../pages/Task";
 import CourseDashboard from "../pages/Tasks";
 import { createBrowserRouter } from 'react-router-dom';
 import React from "react";
-import LoginPage from "../pages/Login";
 import HomePage from "../pages/Home";
 import AdminPanel from "../pages/Admin";
-import UnAuthenticated from "../pages/OAuthLogin";
 import OAuthCallback from "../pages/OAuthCallback";
 import ProtectedRoute from "./ProtectedRoute";
 import OAuthLogin from "../pages/OAuthLogin";
@@ -52,7 +50,6 @@ const router = createBrowserRouter([
         path: "/oauth/callback",
         element: <OAuthCallback/>,
     },
-
 ]);
 
 export default router;

@@ -12,11 +12,12 @@ import { Link, useNavigate } from 'react-router-dom'
 import React from 'react'
 import "../index.css"
 import { useAuth } from '../context/OAuthContext'
-//import "./Legend.css"
+import { useTask } from '../context/TaskContext'
 
 const Legend = ({ id }) => {
     const {user} = useAuth()
     const [text, setText] = useState(String);
+    const {stopTask} = useTask()
     useEffect(() => {
         fetch(`/api/task/readme/${id}`, {
             headers: {
@@ -43,6 +44,7 @@ const Legend = ({ id }) => {
         })
             .then((res) => res.text())
             .then((data) => {
+                stopTask()
                 console.log(data);
                 navigate(target);
             })

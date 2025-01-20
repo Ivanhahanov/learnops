@@ -78,6 +78,10 @@ helm install \
   --namespace cert-manager \
   --create-namespace \
   --set installCRDs=true
+helm upgrade trust-manager jetstack/trust-manager \
+  --install \
+  --namespace cert-manager \
+  --wait
 cat <<EOF | kubectl apply -f -
 ---
 apiVersion: cert-manager.io/v1
@@ -87,6 +91,23 @@ metadata:
 spec:
   ca:
     secretName: ca-key-pair
+---
+apiVersion: trust.cert-manager.io/v1alpha1
+kind: Bundle
+metadata:
+  name: example-bundle
+spec:
+  sources:
+  - useDefaultCAs: true
+  - secret:
+      name: "ca-key-pair"
+      key: "tls.crt"
+  target:
+    configMap:
+      key: "ca-certificates.crt"
+    namespaceSelector:
+      matchLabels:
+        trust: enabled
 EOF
 kubectl apply -f https://kind.sigs.k8s.io/examples/ingress/deploy-ingress-nginx.yaml
 
@@ -213,7 +234,7 @@ resource "keycloak_openid_client" "kube" {
   name                         = "kube"
   enabled                      = true
   access_type                  = "PUBLIC"
-  valid_redirect_uris          = ["https://DOMAIN/oauth/callback"]
+  valid_redirect_uris          = ["https://DOMAIN/oauth/callback", "https://DOMAIN"]
   standard_flow_enabled        = true
   implicit_flow_enabled        = false
   direct_access_grants_enabled = true
@@ -236,7 +257,7 @@ sed -i.bak "s/DOMAIN/$DOMAIN/g" keycloak.tf
 
 echo "# Apply the terraform config"
 TF_CLI_CONFIG_FILE=".tofurc" tofu init && tofu apply -auto-approve
-
+kubectl label namespaces default trust=enabled
 echo "# Setup platform"
 kubectl apply -f ../deploy/cockroachdb-statefulset.yaml -f ../deploy/k8s
 

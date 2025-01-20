@@ -32,7 +32,7 @@ function OAuthLogin() {
                 </div>
             </form>
             <div className="divider">OIDC</div>
-            <button class="btn btn-primary btn-block" onClick={sendOAuthRequest}>Login via Dex</button>
+            <button class="btn btn-primary btn-block" onClick={sendOAuthRequest}>Login via Keycloak</button>
         </div>
     </div>
     )

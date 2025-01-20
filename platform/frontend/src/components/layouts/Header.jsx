@@ -1,7 +1,6 @@
 import { Link } from "react-router-dom";
-import { useContext } from "react";
-import AuthContext from "../../context/AuthContext";
 import { useAuth } from "../../context/OAuthContext";
+import TaskStatusIndicator from "../TaskStatusIndicator";
 
 const Header = () => {
     let { user, logout } = useAuth()
@@ -18,6 +17,7 @@ const Header = () => {
                         
                     }
                 </div>
+                <TaskStatusIndicator />
                 <div className="flex-none">
                     <label className="swap swap-rotate">
                         {/* this hidden checkbox controls the state */}

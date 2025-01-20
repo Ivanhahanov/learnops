@@ -3,11 +3,14 @@ package tasks
 import (
 	"fmt"
 	"platform/pkg/tasks/provider"
+	"platform/pkg/utils"
+	"time"
 )
 
 type ConnectionInfo struct {
-	Uri    string `json:"uri,omitempty"`
-	Status string `json:"status"`
+	Uri       string `json:"uri,omitempty"`
+	Status    string `json:"status,omitempty"`
+	ExpiredAt string `json:"expired_at,omitempty"`
 }
 
 func RunTask(name, user, token string) (*ConnectionInfo, error) {
@@ -15,7 +18,8 @@ func RunTask(name, user, token string) (*ConnectionInfo, error) {
 		return nil, err
 	}
 	return &ConnectionInfo{
-		Uri:    fmt.Sprintf("ws://localhost/%s/xterm.js", user),
-		Status: "Pending",
+		Uri:       fmt.Sprintf("wss://%s/xterm.js", utils.GenHostName("terminal", name, user)),
+		Status:    "Pending",
+		ExpiredAt: fmt.Sprintf("%d", time.Now().Add(time.Minute*10).Unix()), //TODO: fix logic
 	}, nil
 }

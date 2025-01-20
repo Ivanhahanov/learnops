@@ -59,3 +59,10 @@ spec:
             value: "learnops.local"
           - name: CA_ISSUER
             value: ca-issuer
+        volumeMounts:
+        - name: etc-ssl-certs
+          mountPath: /etc/ssl/certs/
+      volumes:
+      - name: etc-ssl-certs
+        configMap:
+          name: example-bundle

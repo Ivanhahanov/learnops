@@ -10,12 +10,24 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Проверяем текущего пользователя при загрузке приложения
-    getUser().then((user) => {
-      setUser(user);
-      setLoading(false);
-    });
+    const checkAuth = async () => {
+      try {
+        const currentUser = await getUser();
+
+        if (currentUser && !currentUser.expired) {
+          setUser(currentUser);
+        } else {
+          setUser(null);
+        }
+      } catch (error) {
+        console.error('Error checking authentication:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    checkAuth();
   }, []);
+
 
   // Функции для входа и выхода
   const handleLogin = () => {

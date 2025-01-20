@@ -6,16 +6,14 @@ import (
 	"log"
 	"platform/pkg/client"
 	"platform/pkg/utils"
-
-	"crypto/tls"
+	"time"
 
 	"github.com/gorilla/websocket"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func CheckIngressWebSocketReady(wsURL string) bool {
-	dialer := *websocket.DefaultDialer
-	dialer.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+	dialer := websocket.Dialer{}
 	conn, _, err := dialer.Dial(wsURL, nil)
 	if err == nil {
 		conn.Close()
@@ -40,7 +38,8 @@ func GetStatus(ns, user, token string) (*ConnectionInfo, error) {
 		}
 	}
 	return &ConnectionInfo{
-		Uri:    uri,
-		Status: status,
+		Uri:       uri,
+		Status:    status,
+		ExpiredAt: fmt.Sprintf("%d", time.Now().Add(time.Minute*10).Unix()), //TODO: fix logic
 	}, nil
 }

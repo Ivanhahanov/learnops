@@ -3,15 +3,13 @@ import IDE from "./IDE";
 import React from "react";
 import { useState, useEffect, useContext, useCallback } from "react";
 import { useParams } from "react-router-dom";
-import AuthContext from "../context/AuthContext";
 import { useAuth } from "../context/OAuthContext";
-
-
-
+import { useTask } from "../context/TaskContext";
 
 
 const Workspace = () => {
-    const {user} = useAuth()
+    const { user } = useAuth()
+    const { taskInfo, startTask } = useTask()
     const { id } = useParams();
     const [sandboxUri, setSandboxUri] = useState(null); // URI для подключения
     const [sandboxStatus, setSandboxStatus] = useState("initial"); // initial, pending, ready, error
@@ -44,12 +42,22 @@ const Workspace = () => {
     };
 
 
-
     // Функция проверки статуса песочницы
     const checkStatus = useCallback(async () => {
         setError(null);
         try {
-            const { uri, status } = await checkSandboxStatus(id);
+            // if task in storage return ready without check
+            const { uri, status, expired_at } = await checkSandboxStatus(id);
+            startTask({
+                name: id,
+                id: id,
+                link: `/task/${id}`,
+                expiredAt: Number(expired_at), // 10 min
+                expiresIn: Number(expired_at) - Math.floor(Date.now() / 1000),
+                startedAt: Math.floor(Date.now() / 1000),
+                uri: uri,
+                status: status
+            });
             setSandboxUri(uri);
             const normalizedStatus = status.toLowerCase();
             setSandboxStatus(normalizedStatus);
@@ -57,6 +65,7 @@ const Workspace = () => {
         } catch (err) {
             setError("Ошибка проверки статуса песочницы");
             setSandboxStatus("error");
+            return "error"
         }
     }, [id]);
 
@@ -81,7 +90,13 @@ const Workspace = () => {
                 launchSandbox();
             }
         };
-        initializeSandbox();
+
+        if (taskInfo && taskInfo.id === id) {
+            setSandboxUri(taskInfo.uri);
+            setSandboxStatus("ready")
+        } else {
+            initializeSandbox();
+        }
     }, []);
 
     // Повторная проверка статуса, если песочница запущена
@@ -93,7 +108,7 @@ const Workspace = () => {
                 if (status === "ready") {
                     clearInterval(interval);
                 }
-            }, 1000);
+            }, 4000);
             return () => clearInterval(interval);
         }
     }, [sandboxStatus, checkStatus]);

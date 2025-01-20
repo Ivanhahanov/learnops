@@ -1,0 +1,30 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: delete-old-tenants
+spec:
+  schedule: "*/1 * * * *" # Запуск каждые 1 минуту
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          serviceAccountName: api-sa
+          containers:
+          - name: delete-old-tenants
+            image: bitnami/kubectl:latest
+            command:
+            - /bin/sh
+            - -c
+            - |
+              echo "Checking for tenants older than 1 hour..."
+              # Текущая дата в формате ISO 8601
+              current_time=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+              # Перебрать всех tenants и удалить тех, кто старше 1 часа
+              kubectl get tenants -o json | jq -c \
+                '.items[] | select(((now - (.metadata.creationTimestamp | fromdateiso8601)) / 60) > 10)' |
+              while read -r tenant; do
+                tenant_name=$(echo $tenant | jq -r '.metadata.name')
+                echo "Deleting tenant: $tenant_name"
+                kubectl delete tenant $tenant_name
+              done
+          restartPolicy: OnFailure

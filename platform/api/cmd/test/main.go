@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"platform/pkg/config"
+	"time"
 )
 
 func main() {
@@ -13,7 +14,8 @@ func main() {
 	// ).Deploy(); err != nil {
 	// 	panic(err)
 	// }
-	config.CheckConfig()
+	//config.CheckConfig()
 	c := config.GetConfig()
 	fmt.Printf("%+v", c)
+	fmt.Println(time.Now().Add(time.Minute * 10).Unix())
 }
