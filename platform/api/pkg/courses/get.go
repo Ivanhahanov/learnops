@@ -41,12 +41,14 @@ func GetCourses(username string) []*models.UsersCourse {
 	return user.AvailableCourses
 }
 
-func RegisterUserToCourse(courseId string, username string) {
+func RegisterUserToCourse(courseId string, username string) error {
 	var user models.User
 	db := database.DbManager()
 	db.First(&user, "name = ?", username)
 	user.AvailableCourses = append(user.AvailableCourses, &models.UsersCourse{CourseID: courseId})
 	db.Save(user)
+	// TODO: add error validation
+	return nil
 }
 
 // TODO

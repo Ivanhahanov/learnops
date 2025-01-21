@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"os"
 	"path/filepath"
@@ -12,6 +11,14 @@ import (
 
 func main() {
 	cmd := &cli.Command{
+		Flags: []cli.Flag{
+			&cli.StringFlag{
+				Name:    "host",
+				Aliases: []string{"H"},
+				Usage:   "host address",
+				Value:   "http://learnops.local",
+			},
+		},
 		Commands: []*cli.Command{
 			{
 				Name:  "upload",
@@ -22,47 +29,34 @@ func main() {
 						Aliases: []string{"c"},
 						Usage:   "config path",
 					},
-					&cli.StringFlag{
-						Name:    "host",
-						Aliases: []string{"H"},
-						Usage:   "host address",
-						Value:   "http://learnops.local",
-					},
 				},
 				Action: func(ctx context.Context, cmd *cli.Command) error {
 					config, err := filepath.Abs(cmd.String("config"))
 					if err != nil {
 						return err
 					}
-					// output, err := filepath.Abs(cmd.String("output"))
-					// if err != nil {
-					// 	return err
-					// }
 					ParseConfig(config).Upload(cmd, filepath.Dir(config))
 					return nil
 				},
 			},
 			{
-				Name:    "template",
-				Aliases: []string{"t"},
-				Usage:   "options for task templates",
-				Commands: []*cli.Command{
-					{
-						Name:  "add",
-						Usage: "add a new template",
-						Action: func(ctx context.Context, cmd *cli.Command) error {
-							fmt.Println("new task template: ", cmd.Args().First())
-							return nil
-						},
+				Name:  "assign",
+				Usage: "assign user to course",
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:    "course",
+						Aliases: []string{"c"},
+						Usage:   "course name",
 					},
-					{
-						Name:  "remove",
-						Usage: "remove an existing template",
-						Action: func(ctx context.Context, cmd *cli.Command) error {
-							fmt.Println("removed task template: ", cmd.Args().First())
-							return nil
-						},
+					&cli.StringFlag{
+						Name:    "user",
+						Aliases: []string{"u"},
+						Usage:   "username",
 					},
+				},
+				Action: func(ctx context.Context, cmd *cli.Command) error {
+					AssignCourseToUser(cmd)
+					return nil
 				},
 			},
 		},

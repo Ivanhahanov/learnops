@@ -25,72 +25,55 @@ const TerminalComponent = ({ id, uri }) => {
   const timeoutRef = useRef(null); // Сохраняем таймер
   const terminalRef = useRef(null);
 
-  const timeout = 5000; // 5 секунд
+  const timeout = 10000; // 5 секунд
 
   useEffect(() => {
-    let ws = null;
-
-    const connectWebSocket = async () => {
-      try {
-        // Создаём WebSocket
-        ws = new WebSocket(uri);
-
-        // Устанавливаем таймер на timeout
-        timeoutRef.current = setTimeout(() => {
-          if (ws && ws.readyState !== WebSocket.OPEN) {
-            ws.close(); // Закрываем WebSocket, если он не подключился
-            setError("WebSocket connection timed out");
-          }
-        }, timeout);
-
-        // Обработчик успешного подключения
-        ws.onopen = () => {
-          clearTimeout(timeoutRef.current); // Очищаем таймер
-          setWebSocket(ws);
-          setIsConnected(true);
-          const attachAddon = new AttachAddon(ws);
-          const fitAddon = new FitAddon();
-          const webglAddon = new WebglAddon();
-          const terminal = new Terminal({
-            cursorBlink: "block",
-            // theme: { background: "dimgrey", cursor: "magenta", selectionBackground: "red" },
-            cursorStyle: "block",
-            // rows: 47,
-            // cols: 118,
-          });
-          // Todo: 
-          // add this commands on start terminal
-          // stty rows 49
-          // stty cols 119
 
 
-          terminal.loadAddon(fitAddon);
-          terminal.loadAddon(webglAddon);
-          terminal.loadAddon(attachAddon);
-          terminal.open(terminalRef.current);
+    const ws = new WebSocket(uri);
 
-          fitAddon.fit();
-        };
+    // Обработчик успешного подключения
+    ws.onopen = () => {
+      clearTimeout(timeoutRef.current); // Очищаем таймер
+      setWebSocket(ws);
+      setIsConnected(true);
+      const attachAddon = new AttachAddon(ws);
+      const fitAddon = new FitAddon();
+      const webglAddon = new WebglAddon();
+      const terminal = new Terminal({
+        cursorBlink: "block",
+        // theme: { background: "dimgrey", cursor: "magenta", selectionBackground: "red" },
+        cursorStyle: "block",
+        // rows: 47,
+        // cols: 118,
+      });
+      // Todo: 
+      // add this commands on start terminal
+      // stty rows 49
+      // stty cols 119
 
-        // Обработчик ошибок
-        ws.onerror = (err) => {
-          clearTimeout(timeoutRef.current); // Очищаем таймер
-          setError("WebSocket error occurred");
-        };
 
-        // Обработчик закрытия
-        ws.onclose = () => {
-          clearTimeout(timeoutRef.current);
-          if (!isConnected) {
-            setError("WebSocket connection was closed before it was established");
-          }
-        };
-      } catch (err) {
-        setError(err.message);
-      }
+      terminal.loadAddon(fitAddon);
+      terminal.loadAddon(webglAddon);
+      terminal.loadAddon(attachAddon);
+      terminal.open(terminalRef.current);
+
+      fitAddon.fit();
     };
 
-    connectWebSocket();
+    // Обработчик ошибок
+    ws.onerror = (err) => {
+      clearTimeout(timeoutRef.current); // Очищаем таймер
+      setError("WebSocket error occurred");
+    };
+
+    // Обработчик закрытия
+    ws.onclose = () => {
+      clearTimeout(timeoutRef.current);
+      if (!isConnected) {
+        setError("WebSocket connection was closed before it was established");
+      }
+    };
 
     // Очистка при размонтировании компонента
     return () => {

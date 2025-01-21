@@ -1,17 +1,7 @@
 import { Link } from "react-router-dom";
 import { useState, useEffect, useContext } from 'react'
-import AuthContext from '../context/AuthContext';
 import '../index.css'
 import { useAuth } from "../context/OAuthContext";
-
-const coursesData = [
-    { id: 1, title: "React для начинающих", category: "Frontend", difficulty: "Beginner", tags: ["JavaScript", "React"] },
-    { id: 2, title: "Основы Node.js", category: "Backend", difficulty: "Intermediate", tags: ["JavaScript", "Node.js"] },
-    { id: 3, title: "Дизайн интерфейсов", category: "UI/UX", difficulty: "Beginner", tags: ["Design", "UI"] },
-    { id: 4, title: "Python для анализа данных", category: "Data Science", difficulty: "Advanced", tags: ["Python", "Data Analysis"] },
-    { id: 5, title: "Веб-разработка с Django", category: "Backend", difficulty: "Intermediate", tags: ["Python", "Django"] },
-    { id: 6, title: "Базовый Linux", category: "Linux", difficulty: "Beginner", tags: ["Bash"] },
-];
 
 
 const Courses = () => {
@@ -38,7 +28,8 @@ const Courses = () => {
     const [selectedCategories, setSelectedCategories] = useState([]);
     const [selectedDifficulties, setSelectedDifficulties] = useState([]);
 
-    const categories = ["Linux", "Frontend", "Backend", "UI/UX", "Data Science", ];
+    // TODO: get from backend
+    const categories = ["Linux", "Git", "Backend", "UI/UX", "Data Science", ];
     const difficulties = ["Beginner", "Intermediate", "Advanced"];
 
     const toggleFilter = (filter, value, setter) => {

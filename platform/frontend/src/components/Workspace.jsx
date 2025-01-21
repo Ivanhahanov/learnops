@@ -28,47 +28,6 @@ const Workspace = () => {
         return response.json(); // Например, { sandboxId: "12345" }
     };
 
-    const checkSandboxStatus = async (taskId) => {
-        // Запрашиваем статус песочницы
-        const response = await fetch(`/api/task/status/${taskId}`, {
-            headers: {
-                'Authorization': 'Bearer ' + String(user.id_token)
-            }
-        });
-        if (!response.ok) {
-            throw new Error("Failed to check sandbox status");
-        }
-        return response.json(); // Например, { status: "ready" }
-    };
-
-
-    // Функция проверки статуса песочницы
-    const checkStatus = useCallback(async () => {
-        setError(null);
-        try {
-            // if task in storage return ready without check
-            const { uri, status, expired_at } = await checkSandboxStatus(id);
-            startTask({
-                name: id,
-                id: id,
-                link: `/task/${id}`,
-                expiredAt: Number(expired_at), // 10 min
-                expiresIn: Number(expired_at) - Math.floor(Date.now() / 1000),
-                startedAt: Math.floor(Date.now() / 1000),
-                uri: uri,
-                status: status
-            });
-            setSandboxUri(uri);
-            const normalizedStatus = status.toLowerCase();
-            setSandboxStatus(normalizedStatus);
-            return normalizedStatus; // Возвращаем статус для синхронной проверки
-        } catch (err) {
-            setError("Ошибка проверки статуса песочницы");
-            setSandboxStatus("error");
-            return "error"
-        }
-    }, [id]);
-
     const launchSandbox = useCallback(async () => {
         setError(null);
         setSandboxStatus("pending");
@@ -82,36 +41,45 @@ const Workspace = () => {
         }
     }, [id]);
 
-    // // Основной эффект: сначала проверяем статус, затем запускаем при необходимости
-    useEffect(() => {
-        const initializeSandbox = async () => {
-            const status = await checkStatus();
-            if (status !== "ready") {
-                launchSandbox();
-            }
-        };
-
-        if (taskInfo && taskInfo.id === id) {
-            setSandboxUri(taskInfo.uri);
-            setSandboxStatus("ready")
-        } else {
-            initializeSandbox();
-        }
-    }, []);
 
     // Повторная проверка статуса, если песочница запущена
 
     useEffect(() => {
-        if (sandboxStatus != "ready") {
-            const interval = setInterval(async () => {
-                const status = await checkStatus();
-                if (status === "ready") {
-                    clearInterval(interval);
+        if (taskInfo && taskInfo.id === id) {
+            setSandboxUri(taskInfo.uri);
+            setSandboxStatus(taskInfo.status)
+            return
+        } else {
+            launchSandbox();
+            // wait for task
+            const socket = new WebSocket(`wss://learnops.local/api/status/${id}?token=${user.id_token}&name=${user.profile.preferred_username}`);
+
+            socket.onmessage = (e) => {
+                const msg = JSON.parse(e.data)
+                console.log("here", msg)
+                startTask({
+                    name: id,
+                    id: id,
+                    link: `/task/${id}`,
+                    expiredAt: Number(msg.expired_at), // 10 min
+                    expiresIn: Number(msg.expired_at) - Math.floor(Date.now() / 1000),
+                    startedAt: Math.floor(Date.now() / 1000),
+                    uri: msg.uri,
+                    status: msg.status
+                });
+                setSandboxUri(msg.uri);
+                setSandboxStatus(msg.status)
+                if (msg.status === "ready") {
+                    socket.close();
                 }
-            }, 4000);
-            return () => clearInterval(interval);
+            };
+
+            return () => {
+                socket.close();
+            };
         }
-    }, [sandboxStatus, checkStatus]);
+    }, []);
+
 
     // If page is in loading state, display
     // loading message. Modify it as per your
