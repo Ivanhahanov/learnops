@@ -43,25 +43,6 @@ const CourseDashboard = () => {
             });
     }, []);
 
-
-    // const openTestModal = (test) => {
-    //     if (tasks.find(a => a.urlId === test.linkedTask)?.status === 'Выполнено') {
-    //         setSelectedTest(test);
-    //         setIsModalOpen(true);
-    //     } else {
-    //         alert('Вы должны сначала выполнить соответствующее задание.');
-    //     }
-    // };
-
-    // const openTestModal = (test) => {
-    //     setSelectedTest(test);
-    //     setIsTestModalOpen(true);
-    // };
-
-    // const closeModal = () => {
-    //     setIsTestModalOpen(false);
-    //     setSelectedTest(null);
-    // };
     const [testModalStates, setTestModalStates] = useState({});
     const openTestModal = (modalId) => {
         setTestModalStates((prev) => ({ ...prev, [modalId]: true }));
@@ -114,7 +95,7 @@ const CourseDashboard = () => {
                             <Skeleton />
                         ) : (
                             lectures.map((lecture, index) => (
-                                <div key={index} className="card shadow bg-base-200 mb-4">
+                                <div key={index} className="card shadow-lg border border-gray-500 rounded-md mb-4">
                                     <div className="card-body">
                                         <h3 className="card-title">{lecture.title}<div className="badge">New</div></h3>
                                         <p>{lecture.description}</p>
@@ -144,7 +125,7 @@ const CourseDashboard = () => {
                             <Skeleton />
                         ) : (
                             materials.map((material, index) => (
-                                <div key={index} className="card shadow bg-base-200 mb-4">
+                                <div key={index} className="card shadow-lg border border-gray-500 rounded-md mb-4">
                                     <div className="card-body">
                                         <h3 className="card-title">{material.title}</h3>
                                         <a href={material.link} className="link link-primary" target="_blank" rel="noopener noreferrer">Открыть</a>
@@ -157,7 +138,7 @@ const CourseDashboard = () => {
 
                 {/* Средняя колонка */}
                 <div className="col-span-6">
-                    <div className="stats stats-vertical lg:stats-horizontal bg-base-200 shadow mb-6 flex mx-10">
+                    <div className="stats stats-horizontal border border-gray-500 shadow-lg mb-6 flex ">
                         <div className="stat">
                             <div className="stat-title">Всего заданий</div>
                             <div className="stat-value">{totalTasks}</div>
@@ -182,7 +163,7 @@ const CourseDashboard = () => {
                     ) : (
                         tasks.map((task, index) => (
                             <Link to={`/task/${task.urlId}`}>
-                                <div key={index} className="card shadow bg-base-200 mb-4 cursor-pointer">
+                                <div key={index} className="card shadow-lg border border-gray-500 rounded-md mb-4 cursor-pointer">
                                     <div className="card-body">
                                         <h3 className="card-title">{task.title}
                                             <span className={`badge ${task.status === 'Completed' ? 'badge-success' :
@@ -206,7 +187,7 @@ const CourseDashboard = () => {
                         <Skeleton />
                     ) : (
                         tests.map((test, index) => (
-                            <div key={index} className="card shadow bg-base-200 mb-4">
+                            <div key={index} className="card shadow-lg border border-gray-500 mb-4 rounded-md">
                                 <div className="card-body">
 
                                     <h3 className="card-title">{test.title}

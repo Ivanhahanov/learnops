@@ -1,5 +1,4 @@
 import App from "../App";
-import Challenges from "../pages/Challenges";
 import Courses from "../pages/Courses";
 import TaskPage from "../pages/Task";
 import CourseDashboard from "../pages/Tasks";
@@ -32,10 +31,6 @@ const router = createBrowserRouter([
             {
                 path: 'task/:id',
                 element: <ProtectedRoute><TaskPage /></ProtectedRoute>,
-            },
-            {
-                path: 'tasks/:id',
-                element: <ProtectedRoute><Challenges /></ProtectedRoute>,
             },
             {  
                 path: 'admin',

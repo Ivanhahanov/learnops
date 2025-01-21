@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { useState, useEffect, useContext } from 'react'
 import '../index.css'
 import { useAuth } from "../context/OAuthContext";
-
+import CourseCard from "../components/CourseCard";
 
 const Courses = () => {
     useAuth
@@ -104,24 +104,7 @@ const Courses = () => {
                         <h2 className="text-xl font-semibold mb-4">{category}</h2>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                             {groupedCourses[category].map((course) => (
-                                <Link to={`/course/${course.course.urlId}`}>
-                                <div key={course.course.urlId} className="card bg-base-200 shadow p-4">
-                                    <h3 className="text-lg font-semibold mb-2">{course.course.title}</h3>
-                                    <p className="text-sm text-gray-500 mb-2">Категория: {course.course.category}</p>
-                                    <p className="text-sm text-gray-500 mb-2">Сложность: {course.course.difficulty}</p>
-                                    <div className="flex flex-wrap gap-2 mb-2">
-                                        {course.course.tags.map((tag) => (
-                                            <span
-                                                key={tag}
-                                                className="badge badge-primary text-sm px-2 py-1"
-                                            >
-                                                {tag}
-                                            </span>
-                                        ))}
-                                    </div>
-                                    {/* <button className="btn btn-primary mt-4">Подробнее</button> */}
-                                </div>
-                                </Link>
+                               <CourseCard course={course}></CourseCard>
                             ))}
                         </div>
                     </div>

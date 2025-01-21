@@ -6,7 +6,7 @@ const Header = () => {
     let { user, logout } = useAuth()
     return (
         <header>
-            <nav className="navbar bg-base-200 shadow-sm  min-h-0">
+            <nav className="navbar border-b border-gray-500   min-h-0">
                 <div className="flex-1">
                     <a className="btn btn btn-ghost text-lg">
                         <Link to="/">Platform</Link></a>
