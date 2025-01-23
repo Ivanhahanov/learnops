@@ -3,13 +3,12 @@ package tasks
 import (
 	"log"
 	"platform/pkg/database"
-	"platform/pkg/models"
 )
 
-func GetReadme(ns, name string) string {
-	var task models.Task
+func GetReadme(taskName string) string {
+	var task database.Task
 	db := database.DbManager()
-	if err := db.Where(&models.Task{ID: name}).First(&task).Error; err != nil {
+	if err := db.Select("readme").Where("name = ?", taskName).First(&task).Error; err != nil {
 		log.Println(err)
 	}
 	return task.Readme

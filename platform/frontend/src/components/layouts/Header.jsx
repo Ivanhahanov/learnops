@@ -8,20 +8,20 @@ const Header = () => {
         <header>
             <nav className="navbar border-b border-gray-500   min-h-0">
                 <div className="flex-1">
-                    <a className="btn btn btn-ghost text-lg">
-                        <Link to="/">Platform</Link></a>
+                    <a className="btn btn btn-ghost text-xl">LearnOps</a>
                     {user &&
-                        <a className="btn btn btn-ghost text-lg">
-                            <Link to="/courses">Courses</Link>
-                        </a>
-                        
+                        <Link to="/courses">
+                            <button className="btn btn btn-ghost text-xl">
+                                Courses
+                            </button>
+                        </Link>
                     }
                 </div>
                 <TaskStatusIndicator />
                 <div className="flex-none">
                     <label className="swap swap-rotate">
                         {/* this hidden checkbox controls the state */}
-                        <input type="checkbox" className="theme-controller" value="cmyk" />
+                        <input type="checkbox" className="theme-controller" value="light" />
                         {/* moon icon */}
                         <svg
                             className="swap-on h-8 w-8 fill-current"

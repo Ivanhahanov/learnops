@@ -4,6 +4,7 @@ import AuthContext from "../context/AuthContext";
 import LectureModal from "../components/LectureModal";
 import QuizModal from '../components/QuizModal';
 import { useAuth } from '../context/OAuthContext';
+import TaskLink from '../components/TaskLink';
 
 const CourseDashboard = () => {
     const { id } = useParams();
@@ -162,7 +163,7 @@ const CourseDashboard = () => {
                         <Skeleton />
                     ) : (
                         tasks.map((task, index) => (
-                            <Link to={`/task/${task.urlId}`}>
+                            <TaskLink id={task.urlId}>
                                 <div key={index} className="card shadow-lg border border-gray-500 rounded-md mb-4 cursor-pointer">
                                     <div className="card-body">
                                         <h3 className="card-title">{task.title}
@@ -175,7 +176,7 @@ const CourseDashboard = () => {
 
                                     </div>
                                 </div>
-                            </Link>
+                            </TaskLink>
                         ))
                     )}
                 </div>

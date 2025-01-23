@@ -7,7 +7,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'https://learnops.local/',
+        target: 'http://localhost:8080',
         secure: false,
         changeOrigin: true,
       },

@@ -35,7 +35,9 @@ func main() {
 					if err != nil {
 						return err
 					}
-					ParseConfig(config).Upload(cmd, filepath.Dir(config))
+					course := ParseCourse(config)
+					course.EnrichFiles()
+					course.Upload(cmd)
 					return nil
 				},
 			},

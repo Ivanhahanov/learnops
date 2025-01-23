@@ -8,18 +8,19 @@ import 'font-awesome/css/font-awesome.min.css';
 
 
 import { useState, useEffect, useContext } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import React from 'react'
 import "../index.css"
 import { useAuth } from '../context/OAuthContext'
 import { useTask } from '../context/TaskContext'
 
-const Legend = ({ id }) => {
+const Legend = () => {
+    const {name} = useParams()
     const {user} = useAuth()
     const [text, setText] = useState(String);
     const {stopTask} = useTask()
     useEffect(() => {
-        fetch(`/api/task/readme/${id}`, {
+        fetch(`/api/task/readme/${name}`, {
             headers: {
                 'Authorization': 'Bearer ' + String(user.id_token)
             }
@@ -35,9 +36,8 @@ const Legend = ({ id }) => {
     }, []);
     const navigate = useNavigate();
 
-    const handleSubmit = async (e, target) => {
-        e.preventDefault();
-        fetch(`/api/task/stop/${id}`,{
+    const handleSubmit = async () => {
+        fetch(`/api/task/stop/${name}`,{
             headers: {
                 'Authorization': 'Bearer ' + String(user.id_token)
             }
@@ -46,7 +46,7 @@ const Legend = ({ id }) => {
             .then((data) => {
                 stopTask()
                 console.log(data);
-                navigate(target);
+                navigate(-1);
             })
             .catch((err) => {
                 console.log(err.message);
@@ -56,7 +56,7 @@ const Legend = ({ id }) => {
     const [verifyStatus, setVerifyStatus] = useState(String);
 
     const verifyChallenge = async () => {
-        fetch(`/api/task/verify/${id}`,{
+        fetch(`/api/task/verify/${name}`,{
             headers: {
                 'Authorization': 'Bearer ' + String(user.id_token)
             }
@@ -114,9 +114,7 @@ const Legend = ({ id }) => {
             <div className="divider px-4"></div>
             <div className="pb-3 pr-4 place-self-end">
                 <VerifyButton verifyStatus={verifyStatus} verifyChallenge={verifyChallenge} />
-                <Link to="/" onClick={e => handleSubmit(e, "/")}>
-                    <button className="btn btn-sm btn-outline btn-error" onClick={e => e.preventDefault()}>Close Session</button>
-                </Link>
+                    <button onClick={() => handleSubmit()} className="btn btn-sm btn-outline btn-error">Close Session</button>
             </div>
         </div>
     )

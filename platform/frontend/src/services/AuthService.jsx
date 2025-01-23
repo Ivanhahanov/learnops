@@ -61,3 +61,22 @@ export async function logout() {
 //     }
 //     await userManager.signinRedirect(args);
 // }
+
+
+[
+    {
+        "id": "c8e5aa8d-1ed0-450e-90e9-953c8ab3091e",
+        "title": "[Basics] Linux",
+        "name": "linux-basic",
+        "description": "Пример курса",
+        "category": "Linux",
+        "difficulty": "Beginner",
+        "is_started": true,
+        "completed_tasks": 1,
+        "total_tasks": 3,
+        "completed_lectures": 1,
+        "total_lectures": 1,
+        "completed_quizzes": 1,
+        "total_quizzes": 2,
+    }
+]

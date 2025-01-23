@@ -264,3 +264,4 @@ kubectl apply -f ../deploy/cockroachdb-statefulset.yaml -f ../deploy/k8s
 kubectl wait --for=condition=Ready pod -l app=api --timeout=30s
 
 learnops upload -c tasks.yml
+learnops upload -c git.yml

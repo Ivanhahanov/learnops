@@ -2,112 +2,123 @@ package courses
 
 import (
 	"fmt"
-	"log"
 	"platform/pkg/database"
-	"platform/pkg/models"
 
-	"github.com/lib/pq"
-	"gorm.io/gorm/clause"
+	"github.com/google/uuid"
 )
 
-type CourseWithTasks struct {
-	ID          string             `json:"urlId"`
-	Title       string             `json:"title"`
-	Tasks       []TaskWithStatus   `json:"tasks" gorm:"foreignKey:ID"`
-	Description string             `json:"description,omitempty"`
-	Difficulty  string             `json:"difficulty,omitempty"`
-	Category    string             `json:"category,omitempty"`
-	Tags        pq.StringArray     `gorm:"type:text[]" json:"tags"`
-	Lectures    []*models.Lecture  `json:"lectures" gorm:"foreignKey:CourseID"`
-	Materials   []*models.Material `json:"materials" gorm:"foreignKey:CourseID"`
-	Tests       []*models.Test     `json:"tests" gorm:"foreignKey:CourseID"`
-}
-
-type TaskWithStatus struct {
-	ID          string `json:"urlId"`
-	Title       string `json:"title,omitempty"`
-	Description string `json:"description,omitempty"`
-	Readme      string `json:"readme,omitempty"`
-	Hint        string `json:"hint,omitempty"`
-	Status      string `json:"status,omitempty"`
-}
-
-func GetCourses(username string) []*models.UsersCourse {
-	var user models.User
+func GetCourses(username string) []database.Course {
+	var courses = []database.Course{}
 	db := database.DbManager()
-	if err := db.Preload("AvailableCourses.Course").First(&user, "name = ?", username).Error; err != nil {
+	err := db.Find(&courses).Error
+	if err != nil {
 		fmt.Println(err)
 	}
-	return user.AvailableCourses
-}
-
-func RegisterUserToCourse(courseId string, username string) error {
-	var user models.User
-	db := database.DbManager()
-	db.First(&user, "name = ?", username)
-	user.AvailableCourses = append(user.AvailableCourses, &models.UsersCourse{CourseID: courseId})
-	db.Save(user)
-	// TODO: add error validation
-	return nil
+	return courses
 }
 
 // TODO
-var defaultCourses = []string{"linux"}
+// var defaultCourses = []string{"linux"}
 
-func RegisterToDefaultCourses(user *models.User) {
-	db := database.DbManager()
-	for _, courseId := range defaultCourses {
-		user.AvailableCourses = append(user.AvailableCourses, &models.UsersCourse{CourseID: courseId})
-	}
-	db.Save(user)
+// func RegisterToDefaultCourses(user *database.User) {
+// 	db := database.DbManager()
+// 	for _, courseId := range defaultCourses {
+// 		user.Enrollments = append(user.Enrollments, &database.Enrollment{CourseID: courseId})
+// 	}
+// 	db.Save(user)
+// }
+
+// CourseProgressResponse представляет структуру ответа
+type CourseProgressResponse struct {
+	Title             string `json:"title"`
+	Name              string `json:"name"`
+	Description       string `json:"description"`
+	Category          string `json:"category"`
+	Difficulty        string `json:"difficulty"`
+	IsStarted         bool   `json:"is_started"`
+	CompletedTasks    int    `json:"completed_tasks"`
+	TotalTasks        int    `json:"total_tasks"`
+	CompletedLectures int    `json:"completed_lectures"`
+	TotalLectures     int    `json:"total_lectures"`
+	CompletedQuizzes  int    `json:"completed_quizzes"`
+	TotalQuizzes      int    `json:"total_quizzes"`
 }
 
-func GetCourse(courseId string) models.Course {
-	var course models.Course
+// GetCoursesWithProgress получает данные по прогрессу курсов для пользователя
+func GetCoursesWithProgress(userID uuid.UUID) ([]CourseProgressResponse, error) {
+	var responses []CourseProgressResponse
 	db := database.DbManager()
-	if err := db.Preload(clause.Associations).Preload("Tests.Questions.Options").
-		Where(&models.Course{ID: courseId}).First(&course).Error; err != nil {
-		log.Println(err)
-	}
-	return course
-}
-
-func GetUsersCourse(courseId string, username string) CourseWithTasks {
-	var course CourseWithTasks
-	user := models.User{}
-	db := database.DbManager()
-	db.Where("name", username).First(&user)
-	// todo Check if course exists in users_courses
-
-	if err := db.Table("courses").
-		Select("id", "title").
-		Preload("Materials").
-		Preload("Lectures").
-		Preload("Tests.Questions.Options").
-		Where("id = ?", courseId).
-		// Joins("left join emails on emails.user_id = users.id").
-		Find(&course).Error; err != nil {
-		fmt.Println(err)
-	}
-	var tasks []TaskWithStatus
-	err := db.Table("tasks").
-		Select(`
-				tasks.id, 
-				tasks.title, 
-				tasks.description, 
-				tasks.readme, 
-				tasks.hint, 
-				COALESCE(task_statuses.status, 'not-started') as status`).
-		Joins("LEFT JOIN task_statuses ON tasks.id = task_statuses.task_id AND task_statuses.user_id = ?", user.ID).
-		Where("tasks.course_id = ?", courseId).
-		Scan(&tasks).Error
+	// Получить все курсы, в которых пользователь зарегистрирован
+	var enrollments []database.Enrollment
+	err := db.Preload("Course.Modules.Lectures").
+		Preload("Course.Modules.Tasks").
+		Preload("Course.Modules.Quizzes").
+		Preload("Progress").
+		Where("user_id = ?", userID).
+		Find(&enrollments).Error
 	if err != nil {
-		log.Println("task with status error", "Failed to fetch tasks")
+		return nil, err
 	}
-	course.Tasks = tasks
-	// course.Tags = []string{}
-	// course.Lectures = []*models.Lecture{}
-	//course.Materials = []*models.Material{}
-	// course.Tests = []*models.Test{}
-	return course
+
+	// Обработать каждую регистрацию
+	for _, enrollment := range enrollments {
+		course := enrollment.Course
+		completedTasks := 0
+		totalTasks := 0
+		completedLectures := 0
+		totalLectures := 0
+		completedQuizzes := 0
+		totalQuizzes := 0
+
+		// Пройтись по модулям курса
+		for _, module := range course.Modules {
+			// Задания
+			totalTasks += len(module.Tasks)
+			for _, task := range module.Tasks {
+				for _, progress := range enrollment.Progress {
+					if progress.TaskID != nil && *progress.TaskID == task.ID && progress.Status == "completed" {
+						completedTasks++
+					}
+				}
+			}
+
+			// Лекции
+			totalLectures += len(module.Lectures)
+			for _, lecture := range module.Lectures {
+				for _, progress := range enrollment.Progress {
+					if progress.LectureID != nil && *progress.LectureID == lecture.ID && progress.Status == "completed" {
+						completedLectures++
+					}
+				}
+			}
+
+			// Викторины
+			totalQuizzes += len(module.Quizzes)
+			for _, quiz := range module.Quizzes {
+				for _, progress := range enrollment.Progress {
+					if progress.QuizID != nil && *progress.QuizID == quiz.ID && progress.Status == "completed" {
+						completedQuizzes++
+					}
+				}
+			}
+		}
+
+		// Добавить данные в ответ
+		responses = append(responses, CourseProgressResponse{
+			Title:             course.Title,
+			Name:              course.Name,
+			Description:       course.Description,
+			Category:          course.Category,
+			Difficulty:        course.Difficulty,
+			IsStarted:         completedTasks > 0 || completedLectures > 0 || completedQuizzes > 0,
+			CompletedTasks:    completedTasks,
+			TotalTasks:        totalTasks,
+			CompletedLectures: completedLectures,
+			TotalLectures:     totalLectures,
+			CompletedQuizzes:  completedQuizzes,
+			TotalQuizzes:      totalQuizzes,
+		})
+	}
+
+	return responses, nil
 }

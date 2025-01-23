@@ -7,7 +7,7 @@ import CourseCard from "../components/CourseCard";
 const Courses = () => {
     useAuth
     const { user } = useAuth();
-    
+
     const [courses, setCourses] = useState([]);
     useEffect(() => {
         fetch("/api/courses", {
@@ -29,7 +29,7 @@ const Courses = () => {
     const [selectedDifficulties, setSelectedDifficulties] = useState([]);
 
     // TODO: get from backend
-    const categories = ["Linux", "Git", "Backend", "UI/UX", "Data Science", ];
+    const categories = ["Linux", "Git", "Backend", "UI/UX", "Data Science",];
     const difficulties = ["Beginner", "Intermediate", "Advanced"];
 
     const toggleFilter = (filter, value, setter) => {
@@ -40,12 +40,12 @@ const Courses = () => {
 
     const filteredCourses = courses.filter(
         (course) =>
-            (selectedCategories.length === 0 || selectedCategories.includes(course.course.category)) &&
-            (selectedDifficulties.length === 0 || selectedDifficulties.includes(course.course.difficulty))
+            (selectedCategories.length === 0 || selectedCategories.includes(course.category)) &&
+            (selectedDifficulties.length === 0 || selectedDifficulties.includes(course.difficulty))
     );
 
     const groupedCourses = categories.reduce((acc, category) => {
-        const categoryCourses = filteredCourses.filter((course) => course.course.category === category);
+        const categoryCourses = filteredCourses.filter((course) => course.category === category);
         if (categoryCourses.length > 0) {
             acc[category] = categoryCourses;
         }
@@ -54,79 +54,68 @@ const Courses = () => {
 
     return (
         <div className="container mx-auto p-6">
-        
-        <div className="flex ">
-            {/* Боковая панель с фильтрами */}
-            <div className="w-1/5 p-4">
-                <h2 className="text-lg font-semibold mb-4">Фильтры</h2>
 
-                {/* Фильтр по категориям */}
-                <div className="mb-4">
-                    <h3 className="text-sm font-medium mb-2">Категории</h3>
-                    {categories.map((category) => (
-                        <label key={category} className="block mb-2">
-                            <input
-                                type="checkbox"
-                                className="checkbox checkbox-primary mr-2"
-                                checked={selectedCategories.includes(category)}
-                                onChange={() => toggleFilter(selectedCategories, category, setSelectedCategories)}
-                            />
-                            {category}
-                        </label>
-                    ))}
-                </div>
+            <div className="flex ">
+                {/* Боковая панель с фильтрами */}
+                <div className="w-1/5 p-4">
+                    <h2 className="text-lg font-semibold mb-4">Фильтры</h2>
 
-                {/* Фильтр по уровню сложности */}
-                <div className="mb-4">
-                    <h3 className="text-sm font-medium mb-2">Сложность</h3>
-                    {difficulties.map((difficulty) => (
-                        <label key={difficulty} className="block mb-2">
-                            <input
-                                type="checkbox"
-                                className="checkbox checkbox-primary mr-2"
-                                checked={selectedDifficulties.includes(difficulty)}
-                                onChange={() => toggleFilter(selectedDifficulties, difficulty, setSelectedDifficulties)}
-                            />
-                            {difficulty}
-                        </label>
-                    ))}
-                </div>
-
-            </div>
-
-            {/* Основной контент с карточками курсов */}
-            <main className="w-3/4 p-4">
-                <h1 className="text-2xl font-bold mb-4">Курсы</h1>
-
-                {Object.keys(groupedCourses).map((category) => (
-                    
-                    <div key={category} className="mb-8">
-                        <h2 className="text-xl font-semibold mb-4">{category}</h2>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                            {groupedCourses[category].map((course) => (
-                               <CourseCard course={course}></CourseCard>
-                            ))}
-                        </div>
+                    {/* Фильтр по категориям */}
+                    <div className="mb-4">
+                        <h3 className="text-sm font-medium mb-2">Категории</h3>
+                        {categories.map((category) => (
+                            <label key={category} className="block mb-2">
+                                <input
+                                    type="checkbox"
+                                    className="checkbox checkbox-primary mr-2"
+                                    checked={selectedCategories.includes(category)}
+                                    onChange={() => toggleFilter(selectedCategories, category, setSelectedCategories)}
+                                />
+                                {category}
+                            </label>
+                        ))}
                     </div>
-                ))}
-            </main>
-        </div>
+
+                    {/* Фильтр по уровню сложности */}
+                    <div className="mb-4">
+                        <h3 className="text-sm font-medium mb-2">Сложность</h3>
+                        {difficulties.map((difficulty) => (
+                            <label key={difficulty} className="block mb-2">
+                                <input
+                                    type="checkbox"
+                                    className="checkbox checkbox-primary mr-2"
+                                    checked={selectedDifficulties.includes(difficulty)}
+                                    onChange={() => toggleFilter(selectedDifficulties, difficulty, setSelectedDifficulties)}
+                                />
+                                {difficulty}
+                            </label>
+                        ))}
+                    </div>
+
+                </div>
+
+                {/* Основной контент с карточками курсов */}
+                <main className="w-3/4 p-4">
+                    <h1 className="text-2xl font-bold mb-4">Курсы</h1>
+
+                    {Object.keys(groupedCourses).map((category) => (
+
+                        <div key={category} className="mb-8">
+                            <h2 className="text-xl font-semibold mb-4">{category}</h2>
+                            <div className="grid grid-cols-2 sm:grid-cols-1 2xl:grid-cols-3 gap-4">
+                                {groupedCourses[category].map((course) => (
+                                    <div key={course.id}>
+                                        <CourseCard course={course}></CourseCard>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    ))}
+                </main>
+            </div>
         </div>
     );
 
-}
-
-function Course(props) {
-    return (
-        <Link to={`/tasks/${props.id}`}>
-            <div className="card bg-base-200 card-side shadow hover:shadow-accent hover:bg-base-300 rounded-xl">
-                <div className="card-body">
-                    <h2 className="card-title text-accent font-mono">{props.name}</h2>
-                    <p className="">{props.description}</p>
-                </div>
-            </div>
-        </Link>
-    )
 }
 
 export default Courses

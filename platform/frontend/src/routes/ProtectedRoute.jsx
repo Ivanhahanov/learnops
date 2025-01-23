@@ -1,7 +1,7 @@
 import { Navigate } from "react-router-dom";
 import { useAuth } from "../context/OAuthContext";
 
-const ProtectedRoute = ({children, redirectPath = '/login'}) => {
+const ProtectedRoute = ({children, redirectPath = '/'}) => {
     const { user, loading } = useAuth()
     
     if (loading) {

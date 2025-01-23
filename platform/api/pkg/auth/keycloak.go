@@ -7,9 +7,7 @@ import (
 	"net/http"
 	"os"
 	"platform/pkg/config"
-	"platform/pkg/courses"
 	"platform/pkg/database"
-	"platform/pkg/models"
 	"strings"
 
 	"github.com/coreos/go-oidc"
@@ -56,7 +54,7 @@ func KeycloakTokenToContextMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 		if !claims.Verified {
 			return fmt.Errorf("email (%q) in returned claims was not verified", claims.Email)
 		}
-		user := models.User{
+		user := database.User{
 			Name:  claims.Name,
 			Email: claims.Email,
 		}
@@ -65,28 +63,29 @@ func KeycloakTokenToContextMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 
 		c.Set("name", user.Name)
 		c.Set("token", bearerToken)
+		c.Set("user_id", user.ID)
 		return next(c)
 	}
 }
 
-func findOrRegisterUser(user *models.User) error {
+func findOrRegisterUser(user *database.User) error {
 	if !checkIfUserExists(user) {
 		registerUser(user)
 	}
 	return nil
 }
 
-func registerUser(user *models.User) error {
+func registerUser(user *database.User) error {
 	db := database.DbManager()
 	err := db.Create(&user).Error
 	if err != nil {
 		return err
 	}
-	courses.RegisterToDefaultCourses(user)
+	//courses.RegisterToDefaultCourses(user)
 	return err
 }
 
-func checkIfUserExists(user *models.User) bool {
+func checkIfUserExists(user *database.User) bool {
 	db := database.DbManager()
 	err := db.First(user, "name = ?", user.Name).Error
 	if err == gorm.ErrRecordNotFound {

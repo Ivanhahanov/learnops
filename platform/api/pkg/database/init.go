@@ -3,7 +3,6 @@ package database
 import (
 	"log"
 	"os"
-	"platform/pkg/models"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -21,20 +20,7 @@ func Init() {
 	if err != nil {
 		panic("DB Connection Error")
 	}
-	db.AutoMigrate(
-		&models.User{},
-		&models.Course{},
-		&models.UsersCourse{},
-		&models.Task{},
-		&models.TaskStatus{},
-		&models.Lecture{},
-		&models.LectureStatus{},
-		&models.Material{},
-		&models.Test{},
-		&models.TestStatus{},
-		&models.Question{},
-		&models.Option{},
-	)
+	Migrate(db)
 }
 
 func DbManager() *gorm.DB {

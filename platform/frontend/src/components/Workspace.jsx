@@ -10,14 +10,14 @@ import { useTask } from "../context/TaskContext";
 const Workspace = () => {
     const { user } = useAuth()
     const { taskInfo, startTask } = useTask()
-    const { id } = useParams();
+    const { name } = useParams();
     const [sandboxUri, setSandboxUri] = useState(null); // URI для подключения
     const [sandboxStatus, setSandboxStatus] = useState("initial"); // initial, pending, ready, error
 
     const [error, setError] = useState(null);
 
-    const startSandbox = async (taskId) => {
-        const response = await fetch(`/api/task/run/${taskId}`, {
+    const startSandbox = async (name) => {
+        const response = await fetch(`/api/task/run/${name}`, {
             headers: {
                 'Authorization': 'Bearer ' + String(user.id_token)
             }
@@ -32,35 +32,36 @@ const Workspace = () => {
         setError(null);
         setSandboxStatus("pending");
         try {
-            const { uri, status } = await startSandbox(id);
+            const { uri, status } = await startSandbox(name);
             setSandboxUri(uri);
             setSandboxStatus(status.toLowerCase());
         } catch (err) {
             setError("Ошибка запуска песочницы");
             setSandboxStatus("error");
         }
-    }, [id]);
+    }, [name]);
 
 
     // Повторная проверка статуса, если песочница запущена
 
     useEffect(() => {
-        if (taskInfo && taskInfo.id === id) {
+        if (taskInfo && taskInfo.name === name) {
             setSandboxUri(taskInfo.uri);
             setSandboxStatus(taskInfo.status)
             return
         } else {
             launchSandbox();
             // wait for task
-            const socket = new WebSocket(`wss://learnops.local/api/status/${id}?token=${user.id_token}&name=${user.profile.preferred_username}`);
+            let schema = (location.protocol == "https:" ? "wss:" : "ws:")
+            let uri = `${schema}//${location.host}/api/status/${name}?token=${user.id_token}&name=${user.profile.preferred_username}`
+            const socket = new WebSocket(uri);
 
             socket.onmessage = (e) => {
                 const msg = JSON.parse(e.data)
                 console.log("here", msg)
                 startTask({
-                    name: id,
-                    id: id,
-                    link: `/task/${id}`,
+                    name: name,
+                    link: `/task/${name}`,
                     expiredAt: Number(msg.expired_at), // 10 min
                     expiresIn: Number(msg.expired_at) - Math.floor(Date.now() / 1000),
                     startedAt: Math.floor(Date.now() / 1000),
@@ -87,7 +88,7 @@ const Workspace = () => {
 
     const tabs = ["Terminal", "IDE"];
     const tabsComponents = {
-        "Terminal": <TerminalComponent id={id} uri={sandboxUri} />,
+        "Terminal": <TerminalComponent uri={sandboxUri} />,
         "IDE": <IDE />
     };
 

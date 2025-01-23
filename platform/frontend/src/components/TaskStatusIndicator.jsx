@@ -1,13 +1,44 @@
 import React from "react";
 import { useTask } from "../context/TaskContext";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/OAuthContext";
 
 
 const TaskStatusIndicator = () => {
     const { taskInfo, stopTask } = useTask();
-    let navigate = useNavigate(); 
-    const routeChange = () =>{  
-      navigate(taskInfo.link);
+    const { user } = useAuth()
+    const handleStop = async () => {
+        fetch(`/api/task/stop/${taskInfo.id}`, {
+            headers: {
+                'Authorization': `Bearer ${user.id_token}`
+            }
+        })
+            .then((res) => res.text())
+            .then((data) => {
+                stopTask()
+                console.log(data);
+            })
+            .catch((err) => {
+                console.log(err.message);
+            });
+    };
+    const formatTime = (seconds) => {
+        const hours = Math.floor(seconds / 3600);
+        const minutes = Math.floor((seconds % 3600) / 60);
+      
+        let formattedTime = '';
+        if (hours > 0) {
+          formattedTime += `${hours}h`;
+        }
+        if (minutes > 0) {
+          formattedTime += `${minutes}m`;
+        }
+      
+        return formattedTime || '0m';
+      }
+    let navigate = useNavigate();
+    const routeChange = () => {
+        navigate(taskInfo.link);
     }
     return (
         <>
@@ -15,7 +46,10 @@ const TaskStatusIndicator = () => {
                 <ul class="menu p-0 bg-base-100 menu-horizontal rounded-lg mx-2">
                     <li>
                         <a onClick={routeChange}>
-                            <span class="badge badge-xs badge-success"></span>
+                            <span className={`badge badge-xs ${taskInfo.status === 'ready' ? 'badge-success' :
+                                taskInfo.status === 'pending' ? 'badge-warning' :
+                                    'badge-error'
+                                }`}></span>
                             <svg
                                 role="img"
                                 xmlns="http://www.w3.org/2000/svg"
@@ -46,11 +80,11 @@ const TaskStatusIndicator = () => {
                                     d="M32 0C14.3 0 0 14.3 0 32s14.3 32 32 32v11c0 42.4 16.9 83.1 46.9 113.1l67.8 67.9l-67.8 67.9C48.9 353.9 32 394.6 32 437v11c-17.7 0-32 14.3-32 32s14.3 32 32 32h320c17.7 0 32-14.3 32-32s-14.3-32-32-32v-11c0-42.4-16.9-83.1-46.9-113.1L237.3 256l67.9-67.9c30-30 46.9-70.7 46.9-113.1V64c17.7 0 32-14.3 32-32s-14.3-32-32-32H64zm64 75V64h192v11c0 19-5.6 37.4-16 53H112c-10.3-15.6-16-34-16-53m16 309c3.5-5.3 7.6-10.3 12.1-14.9l67.9-67.8l67.9 67.9c4.6 4.6 8.6 9.6 12.1 14.9H112z"
                                 />
                             </svg>
-                            {taskInfo.expiresIn}s
+                            {formatTime(taskInfo.expiresIn)}
                         </a>
                     </li>
                     <li>
-                        <a className="p-2" onClick={stopTask}>
+                        <a className="p-2" onClick={handleStop}>
                             <svg
                                 role="img"
                                 xmlns="http://www.w3.org/2000/svg"

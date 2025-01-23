@@ -18,7 +18,7 @@ import '@xterm/xterm/css/xterm.css'
 //   return { webSocket, isConnected, error };
 // };
 
-const TerminalComponent = ({ id, uri }) => {
+const TerminalComponent = ({ uri }) => {
   const [webSocket, setWebSocket] = useState(null); // Хранит объект WebSocket
   const [error, setError] = useState(null); // Хранит ошибку подключения
   const [isConnected, setIsConnected] = useState(false); // Статус подключения

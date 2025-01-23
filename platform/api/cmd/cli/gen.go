@@ -1,10 +1,9 @@
 package main
 
 import (
-	"fmt"
 	"os"
-	"path"
-	"platform/pkg/models"
+	"path/filepath"
+	"platform/pkg/database"
 
 	"sigs.k8s.io/yaml"
 )
@@ -16,7 +15,12 @@ const (
 )
 
 type Config struct {
-	Courses []models.Course `yaml:"courses"`
+	Courses []database.Course `yaml:"courses"`
+}
+
+type Course struct {
+	Course  database.Course
+	BaseDir string
 }
 
 // type Course struct {
@@ -46,6 +50,21 @@ func ParseConfig(path string) *Config {
 		panic(err)
 	}
 	return &config
+}
+
+func ParseCourse(path string) *Course {
+	var course database.Course
+	yamlFile, err := os.ReadFile(path)
+	if err != nil {
+		panic(err)
+	}
+
+	err = yaml.Unmarshal(yamlFile, &course)
+	if err != nil {
+		panic(err)
+	}
+
+	return &Course{Course: course, BaseDir: filepath.Dir(path)}
 }
 
 // func (c *Config) GenConfigMaps(base string) {
@@ -105,25 +124,6 @@ func ParseConfig(path string) *Config {
 // 	}
 // 	return nil
 // }
-
-func getTaskText(base string) string {
-	return readFile(path.Join(base, taskText))
-}
-func getLectureText(base string) string {
-	return readFile(fmt.Sprintf("%s.md", base))
-}
-func getTaskValidationScript(base string) string {
-	return readFile(path.Join(base, validateScript))
-}
-func getTaskHints() string { return "" }
-
-func readFile(path string) string {
-	data, err := os.ReadFile(path)
-	if err != nil {
-		panic(err)
-	}
-	return string(data)
-}
 
 // func (c *Config) SaveManifests(base string) {
 // 	for _, course := range c.Courses {

@@ -8,18 +8,13 @@ import Workspace from "../components/Workspace";
 
 
 const TaskPage = () => {
-
-  // If page is not in loading state, display page.
-  const { id } = useParams();
   return (
     <div className="flex pt-2">
       <div className="w-7/12 mx-auto px-1 pl-2">
         <Workspace />
       </div>
       <div className="w-5/12 mx-auto px-1 pr-2">
-        <Legend
-          id={id}
-        />
+        <Legend />
       </div>
     </div>
   );

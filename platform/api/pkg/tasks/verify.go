@@ -7,11 +7,8 @@ import (
 	"log"
 	"platform/pkg/client"
 	"platform/pkg/database"
-	"platform/pkg/models"
 	"strings"
-	"time"
 
-	"gorm.io/gorm"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/tools/remotecommand"
 	"k8s.io/kubectl/pkg/scheme"
@@ -22,16 +19,16 @@ const (
 )
 
 func VerifyTask(name, username, token string) (string, error) {
-	var task models.Task
+	var task database.Task
 	db := database.DbManager()
-	if err := db.Where(&models.Task{ID: name}).First(&task).Error; err != nil {
+	if err := db.Where(&database.Task{Name: name}).First(&task).Error; err != nil {
 		log.Println(err)
 	}
-	if task.Validator == "" {
+	if task.Validate == "" {
 		return "", fmt.Errorf("no verify script")
 	}
 
-	output, stderr, err := execPod(name, "terminal", token, task.Validator)
+	output, stderr, err := execPod(name, "terminal", token, task.Validate)
 	if err != nil {
 		log.Println("err", err)
 		return "", fmt.Errorf(err.Error())
@@ -43,48 +40,48 @@ func VerifyTask(name, username, token string) (string, error) {
 	fmt.Printf("%q\n", output)
 	if output == "ok" {
 		fmt.Println("task submitted")
-		err := submitTask(name, username)
-		if err != nil {
-			log.Println("submit err:", err)
-		}
+		// err := submitTask(name, username)
+		// if err != nil {
+		// 	log.Println("submit err:", err)
+		// }
 	}
 	return output, nil
 }
 
-func submitTask(taskName string, username string) error {
+// func submitTask(taskName string, username string) error {
 
-	db := database.DbManager()
+// 	db := database.DbManager()
 
-	// Find user id
-	var user models.User
-	db.Where("name = ?", username).First(&user)
+// 	// Find user id
+// 	var user models.User
+// 	db.Where("name = ?", username).First(&user)
 
-	var taskStatus models.TaskStatus
-	err := db.Where("user_id = ? AND task_id = ?", user.ID, taskName).First(&taskStatus).Error
-	if err != nil {
-		if err == gorm.ErrRecordNotFound {
-			// Если записи нет, создаем новую
-			taskStatus = models.TaskStatus{
-				UserID: user.ID,
-				TaskID: taskName,
-				Status: CompletedStatus,
-			}
-			if err := db.Create(&taskStatus).Error; err != nil {
-				return fmt.Errorf("Failed to save task status")
-			}
-		} else {
-			return fmt.Errorf("Database error")
-		}
-	} else {
-		// Если запись уже существует, обновляем статус
-		taskStatus.Status = CompletedStatus
-		taskStatus.UpdatedAt = time.Now()
-		if err := db.Save(&taskStatus).Error; err != nil {
-			return fmt.Errorf("Failed to update task status")
-		}
-	}
-	return nil
-}
+// 	var taskStatus models.TaskStatus
+// 	err := db.Where("user_id = ? AND task_id = ?", user.ID, taskName).First(&taskStatus).Error
+// 	if err != nil {
+// 		if err == gorm.ErrRecordNotFound {
+// 			// Если записи нет, создаем новую
+// 			taskStatus = models.TaskStatus{
+// 				UserID: user.ID,
+// 				TaskID: taskName,
+// 				Status: CompletedStatus,
+// 			}
+// 			if err := db.Create(&taskStatus).Error; err != nil {
+// 				return fmt.Errorf("Failed to save task status")
+// 			}
+// 		} else {
+// 			return fmt.Errorf("Database error")
+// 		}
+// 	} else {
+// 		// Если запись уже существует, обновляем статус
+// 		taskStatus.Status = CompletedStatus
+// 		taskStatus.UpdatedAt = time.Now()
+// 		if err := db.Save(&taskStatus).Error; err != nil {
+// 			return fmt.Errorf("Failed to update task status")
+// 		}
+// 	}
+// 	return nil
+// }
 
 func execPod(ns, name, token, command string) (string, string, error) {
 	c := client.Init(token)
