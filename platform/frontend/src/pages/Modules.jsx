@@ -184,7 +184,6 @@ const ModulesPage = () => {
                         const totalLectures = topic.lectures.length;
                         const totalQuizzes = topic.quizzes.length;
 
-
                         return (
                             <div
                                 key={index}
@@ -193,10 +192,39 @@ const ModulesPage = () => {
                                 <div className="flex justify-between items-center flex-wrap gap-4">
                                     <h2 className="text-xl font-bold flex-grow">{topic.title}</h2>
                                     <div className="flex items-center gap-4">
-                                        <div className="text-sm">
-                                            ⚙️{completedTasks}/{totalTasks}{" "}
-                                            📘{completedLectures}/{totalLectures}{" "}
-                                            📝{completedQuizzes}/{totalQuizzes}{" "}
+                                        <div className="flex items-center gap-4 text-sm font-medium">
+                                            <div className="flex items-center gap-1">
+                                                <span className="text-xl">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-6">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" d="m6.75 7.5 3 2.25-3 2.25m4.5 0h3m-9 8.25h13.5A2.25 2.25 0 0 0 21 18V6a2.25 2.25 0 0 0-2.25-2.25H5.25A2.25 2.25 0 0 0 3 6v12a2.25 2.25 0 0 0 2.25 2.25Z" />
+                                                    </svg>
+
+                                                </span>
+                                                <span>
+                                                    {completedTasks}/{totalTasks}
+                                                </span>
+                                            </div>
+                                            <div className="flex items-center gap-1">
+                                                <span className="text-xl">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-6">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25" />
+                                                    </svg>
+
+                                                </span>
+                                                <span>
+                                                    {completedLectures}/{totalLectures}
+                                                </span>
+                                            </div>
+                                            <div className="flex items-center gap-1">
+                                                <span className="text-xl">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-6">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
+                                                    </svg>
+                                                </span>
+                                                <span>
+                                                    {completedQuizzes}/{totalQuizzes}
+                                                </span>
+                                            </div>
                                         </div>
                                         <div className="w-32">
                                             <div className="w-full bg-gray-200 rounded-full h-2">
@@ -225,8 +253,18 @@ const ModulesPage = () => {
                                                     className={`indicator ${lecture.completed ? "bg-blue-500" : "bg-gray-300"
                                                         } w-3 h-3 rounded-full mr-4`}
                                                 ></div>
+
                                                 <span className="flex-grow text-sm">
-                                                    📘 Лекция: {lecture.title}
+                                                    <div className="flex items-center gap-1">
+                                                        <span className="text-xl">
+                                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-6">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25" />
+                                                            </svg>
+                                                        </span>
+                                                        <span>
+                                                            {lecture.title}
+                                                        </span>
+                                                    </div>
                                                 </span>
                                                 <button
                                                     onClick={() => openLectureModal(lecture.id)}
@@ -252,7 +290,17 @@ const ModulesPage = () => {
                                                 ></div>
                                                 <span className="flex-grow text-sm">
                                                     {/* <svg role="img" className="h-4 w-4" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" version="1.1" fill="none" stroke="#000000" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <rect height="10.5" width="12.5" y="2.75" x="1.75"></rect> <path d="m8.75 10.25h2.5m-6.5-4.5 2.5 2.25-2.5 2.25"></path> </g></svg> */}
-                                                    ⚙️ Задание: {task.title}
+                                                    <div className="flex items-center gap-1">
+                                                        <span className="text-xl">
+                                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-6">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" d="m6.75 7.5 3 2.25-3 2.25m4.5 0h3m-9 8.25h13.5A2.25 2.25 0 0 0 21 18V6a2.25 2.25 0 0 0-2.25-2.25H5.25A2.25 2.25 0 0 0 3 6v12a2.25 2.25 0 0 0 2.25 2.25Z" />
+                                                            </svg>
+
+                                                        </span>
+                                                        <span>
+                                                            {task.title}
+                                                        </span>
+                                                    </div>
                                                 </span>
                                                 <TaskLink name={task.name} id={task.id}>
                                                     <button className="btn btn-sm btn-accent w-24">
@@ -270,7 +318,18 @@ const ModulesPage = () => {
                                                         } w-3 h-3 rounded-full mr-4`}
                                                 ></div>
                                                 <span className="flex-grow text-sm">
-                                                    📝 {quiz.title}
+                                                    <span className="flex-grow text-sm">
+                                                        <div className="flex items-center gap-1">
+                                                            <span className="text-xl">
+                                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-6">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
+                                                                </svg>
+                                                            </span>
+                                                            <span>
+                                                                {quiz.title}
+                                                            </span>
+                                                        </div>
+                                                    </span>
                                                 </span>
                                                 <button
                                                     onClick={() => openTestModal(quiz.id)}
