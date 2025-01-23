@@ -1,0 +1,21 @@
+title: "[Basics] Linux"
+name: linux-basic
+description: Пример курса
+category: "Linux"
+difficulty: "Beginner"
+modules:
+  - title: Поезд призрак
+    name: ghost-train
+    description: "Описание модуля"
+    lectures: 
+      - title: Linux
+        name: linux
+      - title: "Bash: основные команды"
+        name: bash
+    tasks:
+      - title: Поезд призрак
+        name: task
+    quizzes:
+      - title: Какой ты поезд?
+        name: quiz
+    

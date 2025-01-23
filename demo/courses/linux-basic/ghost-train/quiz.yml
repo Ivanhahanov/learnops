@@ -1,0 +1,38 @@
+- type: choice
+  text: Какой командой можно создать директорию в Linux?
+  options:
+    - option: mkdir
+      is_right: true
+    - option: rmdir
+    - option: touch
+    - option: cd
+- type: choice
+  text: Что делает команда chmod 600 файл.txt?
+  options:
+    - option: Дает только владельцу право читать и записывать файл
+      is_right: true
+    - option: Удаляет файл
+    - option: Дает право на выполнение файла всем пользователям
+    - option: Меняет владельца файла
+- type: text
+  text: Какой символ используется для перенаправления вывода в файл?
+  right: ">"
+- type: choice
+  text: Что делает команда echo $PATH?
+  options:
+    - option: Показывает текущие пути поиска исполняемых файлов
+      is_right: true
+    - option: Устанавливает новый путь поиска
+    - option: Очищает переменную PATH
+    - option: Перезапускает оболочку
+- type: text
+  text: Какой командой можно вывести первые 10 строк файла?
+  right: "head -n 10 <имя_файла>"
+- type: choice
+  text: Что означает команда "|" в Bash?
+  options:
+    - option: Передает вывод одной команды на вход другой команды
+      is_right: true
+    - option: Завершает текущий процесс
+    - option: Соединяет строки в файл
+    - option: Указывает комментарий
