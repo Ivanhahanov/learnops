@@ -1,0 +1,17 @@
+- type: choice
+  text: Какая команда используется для инициализации нового репозитория?
+  options:
+    - option: git init
+      is_right: true
+    - option: git start
+    - option: git create
+    - option: git new
+
+- type: choice
+  text: Что делает команда `git status`?
+  options:
+    - option: Показывает состояние рабочего каталога и индекса
+      is_right: true
+    - option: Сбрасывает изменения в файлах
+    - option: Удаляет репозиторий
+    - option: Создает новую ветку

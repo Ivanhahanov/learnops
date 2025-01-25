@@ -1,0 +1,35 @@
+- type: choice
+  text: Какая команда используется для создания новой ветки?
+  options:
+    - option: git branch <имя_ветки>
+      is_right: true
+    - option: git create-branch <имя_ветки>
+    - option: git new-branch <имя_ветки>
+    - option: git checkout -b <имя_ветки>
+
+- type: choice
+  text: Что делает команда git merge <имя_ветки>?
+  options:
+    - option: Объединяет изменения из указанной ветки в текущую
+      is_right: true
+    - option: Удаляет указанную ветку
+    - option: Переключается на указанную ветку
+    - option: Показывает историю изменений в ветке
+
+- type: choice
+  text: Какая команда используется для отправки изменений на удаленный репозиторий?
+  options:
+    - option: git push
+      is_right: true
+    - option: git send
+    - option: git upload
+    - option: git commit-remote
+
+- type: choice
+  text: Что произойдет, если в ветке есть конфликты при выполнении git merge?
+  options:
+    - option: Git остановит слияние и попросит вручную разрешить конфликты
+      is_right: true
+    - option: Git автоматически удалит конфликтующие файлы
+    - option: Слияние завершится успешно, но изменения пропадут
+    - option: Git удалит ветку с конфликтами

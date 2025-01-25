@@ -1,0 +1,54 @@
+title: "[Basics] Git"
+name: git-basic
+description: "Курс для освоения Git с нуля до уверенного уровня, включая использование GPG для подписи коммитов."
+category: "Version Control"
+difficulty: "Intermediate"
+modules:
+  - title: "Основы Git: Путеводитель для новичков"
+    name: git-basics
+    description: "Знакомство с Git: от первых команд до понимания базовых процессов."
+    lectures: 
+      - title: Зачем нам Git? Основные понятия
+        name: why-git
+      - title: "Инициализация и первые шаги"
+        name: git-init
+    tasks:
+      - title: Первая инициализация репозитория
+        name: init-repo
+    quizzes:
+      - title: Что ты знаешь о Git?
+        name: basics
+
+  - title: Работа с ветками и удаленными репозиториями
+    name: branches-remotes
+    description: "Научимся работать с ветками, объединять изменения и сотрудничать в команде."
+    lectures: 
+      - title: "Ветки: зачем и как?"
+        name: branches
+      - title: "Удаленные репозитории: push и pull"
+        name: remotes
+    tasks:
+      - title: Создание и слияние веток
+        name: merge-branches
+      - title: Работа с удаленным репозиторием
+        name: remote-repo
+    quizzes:
+      - title: Как ты управляешь ветками?
+        name: branches
+
+  - title: Безопасность и продвинутые фишки Git
+    name: git-advanced
+    description: "Использование GPG для подписи коммитов и работа с историей репозитория."
+    lectures: 
+      - title: "GPG: зачем и как подписывать коммиты?"
+        name: gpg-sign
+      - title: "Работа с историей: rebase, cherry-pick"
+        name: git-history
+    tasks:
+      - title: Настройка GPG подписи
+        name: gpg-setup
+      - title: Сложные операции с историей
+        name: history-ops
+    quizzes:
+      - title: Проверь свою GPG магию
+        name: gpg

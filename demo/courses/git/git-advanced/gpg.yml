@@ -1,0 +1,35 @@
+- type: choice
+  text: Какая команда используется для создания подписанного коммита?
+  options:
+    - option: git commit -S -m "Сообщение"
+      is_right: true
+    - option: git commit -m "Сообщение"
+    - option: git sign -m "Сообщение"
+    - option: git gpg -m "Сообщение"
+
+- type: choice
+  text: Что делает команда git rebase?
+  options:
+    - option: Переносит коммиты из одной ветки в другую, изменяя историю
+      is_right: true
+    - option: Создает новую ветку
+    - option: Удаляет все коммиты в ветке
+    - option: Показывает только последние коммиты
+
+- type: choice
+  text: Для чего используется команда git cherry-pick?
+  options:
+    - option: Для переноса конкретного коммита в текущую ветку
+      is_right: true
+    - option: Для удаления коммита
+    - option: Для переключения на другой коммит
+    - option: Для слияния двух веток
+
+- type: choice
+  text: Как проверить, что коммит был подписан GPG?
+  options:
+    - option: Использовать команду git log --show-signature
+      is_right: true
+    - option: Проверить содержимое файла .gpg
+    - option: Запустить git verify-signature
+    - option: Проверить статус с помощью git status
