@@ -18,6 +18,12 @@ func main() {
 				Usage:   "host address",
 				Value:   "http://learnops.local",
 			},
+			&cli.StringFlag{
+				Name:    "token-path",
+				Aliases: []string{""},
+				Usage:   "path of file with tokens",
+				Value:   "oidc_token.json",
+			},
 		},
 		Commands: []*cli.Command{
 			{
@@ -45,7 +51,7 @@ func main() {
 				Name:  "assign",
 				Usage: "assign user to course",
 				Flags: []cli.Flag{
-					&cli.StringFlag{
+					&cli.StringSliceFlag{
 						Name:    "course",
 						Aliases: []string{"c"},
 						Usage:   "course name",
@@ -57,10 +63,11 @@ func main() {
 					},
 				},
 				Action: func(ctx context.Context, cmd *cli.Command) error {
-					AssignCourseToUser(cmd)
+					AssignCoursesToUser(cmd)
 					return nil
 				},
 			},
+			LoginCommand(),
 		},
 	}
 

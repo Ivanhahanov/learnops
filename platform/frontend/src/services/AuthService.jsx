@@ -38,45 +38,16 @@ export async function renewToken() {
 
 export async function getAccessToken() {
     const user = await getUser();
-    return user?.access_token;
+
+    if (user?.expired) {
+        console.log('Token expired, attempting to renew...');
+        const refreshedUser = await userManager.signinSilent();
+        return refreshedUser.access_token;
+    }
+    return user?.id_token;
 }
 
 export async function logout() {
     await userManager.clearStaleState()
     await userManager.signoutRedirect();
 }
-
-// This function is used to access token claims
-// `.profile` is available in Open Id Connect implementations
-// in simple OAuth2 it is empty, because UserInfo endpoint does not exist
-// export async function getRole() {
-//     const user = await getUser();
-//     return user?.profile?.role;
-// }
-
-// This function is used to change account similar way it is done in Google
-// export async function selectOrganization() {
-//     const args = {
-//         prompt: "select_account"
-//     }
-//     await userManager.signinRedirect(args);
-// }
-
-
-[
-    {
-        "id": "c8e5aa8d-1ed0-450e-90e9-953c8ab3091e",
-        "title": "[Basics] Linux",
-        "name": "linux-basic",
-        "description": "Пример курса",
-        "category": "Linux",
-        "difficulty": "Beginner",
-        "is_started": true,
-        "completed_tasks": 1,
-        "total_tasks": 3,
-        "completed_lectures": 1,
-        "total_lectures": 1,
-        "completed_quizzes": 1,
-        "total_quizzes": 2,
-    }
-]

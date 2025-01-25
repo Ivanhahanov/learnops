@@ -6,9 +6,8 @@ function CourseCard({ course }) {
     const lecturesStats = course.is_started ? `${course.completed_lectures}/${course.total_lectures}` : course.total_lectures
     const quizzesStats = course.is_started ? `${course.completed_quizzes}/${course.total_quizzes}` : course.total_quizzes
     return (
-        <Link to={`/course/${course.name}`}>
-            <div className="card w-full max-w-md bg-base-100 shadow-xl p-4 border border-gray-500">
-
+        <div className="card w-full max-w-md bg-base-100 shadow-xl p-4 border border-gray-500">
+            <Link to={`/course/${course.name}`}>
                 <div className="card-header mb-4">
                     <div className="grid grid-cols-2 gap-4">
                         <div>
@@ -48,8 +47,9 @@ function CourseCard({ course }) {
                         <p className="text-sm text-gray-500">Tests</p>
                     </div>
                 </div>
-            </div>
-        </Link>
+
+            </Link>
+        </div>
     );
 };
 

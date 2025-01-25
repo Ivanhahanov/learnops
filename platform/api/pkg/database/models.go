@@ -26,8 +26,6 @@ type Module struct {
 	Lectures    []*Lecture `gorm:"foreignKey:ModuleID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE" json:"lectures,omitempty"`
 	Tasks       []*Task    `gorm:"foreignKey:ModuleID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE" json:"tasks,omitempty"`
 	Quizzes     []*Quiz    `gorm:"foreignKey:ModuleID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE" json:"quizzes,omitempty"`
-
-	UniqueIndex string `gorm:"uniqueIndex:idx_module_course;type:varchar(255)" json:"unique_index,omitempty"`
 }
 
 // Lecture represents a lecture within a module
@@ -37,8 +35,6 @@ type Lecture struct {
 	Name     string    `gorm:"not null" json:"name,omitempty"`
 	ModuleID uuid.UUID `gorm:"not null" json:"module_id,omitempty"`
 	Content  string    `gorm:"type:text" json:"content,omitempty"` // Text content loaded from file
-
-	UniqueIndex string `gorm:"uniqueIndex:idx_lecture_module;type:varchar(255)" json:"unique_index,omitempty"`
 }
 
 // Task represents a task within a module
@@ -49,8 +45,6 @@ type Task struct {
 	ModuleID uuid.UUID `gorm:"not null"`
 	Readme   string    `gorm:"type:text"` // Readme content loaded from file
 	Validate string    `gorm:"type:text"` // Validation script loaded from file
-
-	UniqueIndex string `gorm:"uniqueIndex:idx_task_module;type:varchar(255)"`
 }
 
 // Quiz represents a quiz within a module
@@ -60,8 +54,6 @@ type Quiz struct {
 	Name      string      `gorm:"not null" json:"name,omitempty"`
 	ModuleID  uuid.UUID   `gorm:"not null" json:"module_id,omitempty"`
 	Questions []*Question `gorm:"foreignKey:QuizID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE" json:"questions,omitempty"`
-
-	UniqueIndex string `gorm:"uniqueIndex:idx_quiz_module;type:varchar(255)" json:"unique_index,omitempty"`
 }
 
 // Question represents a question within a quiz
@@ -103,7 +95,6 @@ type Enrollment struct {
 type Progress struct {
 	ID           uuid.UUID `gorm:"type:uuid;default:uuid_generate_v4()"`
 	EnrollmentID uuid.UUID `gorm:"not null"`
-	ModuleID     *uuid.UUID
 	LectureID    *uuid.UUID
 	TaskID       *uuid.UUID
 	QuizID       *uuid.UUID

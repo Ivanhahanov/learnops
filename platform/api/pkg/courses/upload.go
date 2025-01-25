@@ -1,26 +1,138 @@
 package courses
 
 import (
+	"errors"
+	"fmt"
 	"platform/pkg/database"
 
 	"github.com/google/uuid"
-	"gorm.io/gorm/clause"
+	"gorm.io/gorm"
 )
 
-func UploadCourse(course database.Course) error {
-	db := database.DbManager()
-	if err := db.Clauses(clause.OnConflict{
-		UpdateAll: true,
-	}).Save(&course).Error; err != nil {
-		return err
+func CreateOrUpdateCourse(db *gorm.DB, course *database.Course) error {
+	tx := db.Begin() // Начинаем транзакцию
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
+	// Найти существующий курс по имени
+	var existingCourse database.Course
+	if err := tx.Where("name = ?", course.Name).First(&existingCourse).Error; err != nil {
+		if !errors.Is(err, gorm.ErrRecordNotFound) {
+			tx.Rollback()
+			return err
+		}
 	}
-	// if db.Model(&course).Where("name = ?", course.Name).Updates(&course).RowsAffected == 0 {
-	// 	db.Create(&course)
-	// }
+
+	if existingCourse.ID != uuid.Nil {
+		// Курс существует, обновляем его
+		course.ID = existingCourse.ID
+		if err := tx.Model(&existingCourse).Updates(course).Error; err != nil {
+			tx.Rollback()
+			return err
+		}
+	} else {
+		// Курс не существует, создаём его
+		if err := tx.Create(course).Error; err != nil {
+			tx.Rollback()
+			return err
+		}
+	}
+
+	// Обновляем модули
+	for _, module := range course.Modules {
+		module.CourseID = course.ID // Убедиться, что связь установлена
+		if err := CreateOrUpdateModule(tx, module); err != nil {
+			tx.Rollback()
+			return err
+		}
+	}
+
+	return tx.Commit().Error
+}
+
+func CreateOrUpdateModule(db *gorm.DB, module *database.Module) error {
+	// Найти существующий модуль по имени и course_id
+	var existingModule database.Module
+	if err := db.Where("name = ? AND course_id = ?", module.Name, module.CourseID).First(&existingModule).Error; err != nil {
+		if !errors.Is(err, gorm.ErrRecordNotFound) {
+			return err
+		}
+	}
+
+	if existingModule.ID != uuid.Nil {
+		// Модуль существует, обновляем его
+		module.ID = existingModule.ID
+		if err := db.Model(&existingModule).Updates(module).Error; err != nil {
+			return err
+		}
+	} else {
+		// Модуль не существует, создаём его
+		if err := db.Create(module).Error; err != nil {
+			return err
+		}
+	}
+
+	// Обновляем лекции
+	for _, lecture := range module.Lectures {
+		lecture.ModuleID = module.ID // Убедиться, что связь установлена
+		if err := CreateOrUpdateLecture(db, lecture); err != nil {
+			return err
+		}
+	}
+
+	// Обновляем задания
+	for _, task := range module.Tasks {
+		task.ModuleID = module.ID // Убедиться, что связь установлена
+		if err := CreateOrUpdateTask(db, task); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
+func CreateOrUpdateLecture(db *gorm.DB, lecture *database.Lecture) error {
+	var existingLecture database.Lecture
+	if err := db.Where("name = ? AND module_id = ?", lecture.Name, lecture.ModuleID).First(&existingLecture).Error; err != nil {
+		if !errors.Is(err, gorm.ErrRecordNotFound) {
+			return err
+		}
+	}
+
+	if existingLecture.ID != uuid.Nil {
+		lecture.ID = existingLecture.ID
+		return db.Model(&existingLecture).Updates(lecture).Error
+	}
+
+	return db.Create(lecture).Error
+}
+
+func CreateOrUpdateTask(db *gorm.DB, task *database.Task) error {
+	var existingTask database.Task
+	if err := db.Where("name = ? AND module_id = ?", task.Name, task.ModuleID).First(&existingTask).Error; err != nil {
+		if !errors.Is(err, gorm.ErrRecordNotFound) {
+			return err
+		}
+	}
+
+	if existingTask.ID != uuid.Nil {
+		task.ID = existingTask.ID
+		return db.Model(&existingTask).Updates(task).Error
+	}
+
+	return db.Create(task).Error
+}
+
+func UploadCourse(course database.Course) error {
+	db := database.DbManager()
+	return CreateOrUpdateCourse(db, &course)
+}
+
 type PersonalModule struct {
+	ID        uuid.UUID        `json:"id,omitempty"`
 	Title     string           `json:"title"`
 	Lectures  []PersonalStatus `json:"lectures"`
 	Tasks     []PersonalStatus `json:"tasks"`
@@ -35,21 +147,6 @@ type PersonalStatus struct {
 	Completed bool      `json:"completed"`
 }
 
-func GetFullCourses() ([]database.Course, error) {
-	var courses = []database.Course{}
-	db := database.DbManager()
-	err := db.Preload("Modules").Find(&courses).Error
-	return courses, err
-}
-
-func GetLecture(lectureId string) (*database.Lecture, error) {
-	var lecture = database.Lecture{
-		ID: uuid.MustParse(lectureId),
-	}
-	err := database.DbManager().Select("content").First(&lecture).Error
-	return &lecture, err
-}
-
 func GetQuiz(quizId string) (*database.Quiz, error) {
 	var quiz = database.Quiz{
 		ID: uuid.MustParse(quizId),
@@ -57,34 +154,31 @@ func GetQuiz(quizId string) (*database.Quiz, error) {
 	err := database.DbManager().Preload("Questions.Options").First(&quiz).Error
 	return &quiz, err
 }
-
-func GetModules(courseName, userName string) ([]PersonalModule, error) {
+func GetModules(userId uuid.UUID, courseName string) ([]PersonalModule, error) {
 	db := database.DbManager()
 	var enrollment database.Enrollment
 	var course database.Course
-	var user database.User
-	// TODO: validate if not exists
-	// Get user and course ID
-	db.First(&user, "name = ?", userName)
-	db.First(&course, "name = ?", courseName)
-
-	err := db.Preload("Course.Modules.Lectures").
+	if err := db.First(&course, "name = ?", courseName).Error; err != nil {
+		return nil, fmt.Errorf("course not found: %v", err)
+	}
+	// Получение записи об участии пользователя в курсе
+	if err := db.
+		Preload("Course.Modules.Lectures").
 		Preload("Course.Modules.Tasks").
 		Preload("Course.Modules.Quizzes").
-		Preload("Progress", "enrollment_id = ?", user.ID).
-		Where("user_id = ? AND course_id = ?", user.ID, course.ID).
-		First(&enrollment).Error
-
-	if err != nil {
-		return nil, err
+		Preload("Progress").
+		Where("user_id = ? AND course_id = ?", userId, course.ID).
+		First(&enrollment).Error; err != nil {
+		return nil, fmt.Errorf("enrollment not found: %v", err)
 	}
 
 	var result []PersonalModule
 
+	// Формирование результата
 	for _, module := range enrollment.Course.Modules {
 		moduleCompleted := true
 
-		// Lectures
+		// Обработка лекций
 		var lectures []PersonalStatus
 		for _, lecture := range module.Lectures {
 			progress := getStatus(enrollment.Progress, lecture.ID, "lecture")
@@ -98,7 +192,7 @@ func GetModules(courseName, userName string) ([]PersonalModule, error) {
 			}
 		}
 
-		// Tasks
+		// Обработка заданий
 		var tasks []PersonalStatus
 		for _, task := range module.Tasks {
 			progress := getStatus(enrollment.Progress, task.ID, "task")
@@ -113,7 +207,7 @@ func GetModules(courseName, userName string) ([]PersonalModule, error) {
 			}
 		}
 
-		// Quizzes
+		// Обработка квизов
 		var quizzes []PersonalStatus
 		for _, quiz := range module.Quizzes {
 			progress := getStatus(enrollment.Progress, quiz.ID, "quiz")
@@ -127,7 +221,9 @@ func GetModules(courseName, userName string) ([]PersonalModule, error) {
 			}
 		}
 
+		// Добавление модуля в результат
 		result = append(result, PersonalModule{
+			ID:        module.ID,
 			Title:     module.Title,
 			Lectures:  lectures,
 			Tasks:     tasks,

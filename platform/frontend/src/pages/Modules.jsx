@@ -19,13 +19,10 @@ const ModulesPage = () => {
                 }
             }) // Замените на ваш API
             const data = await response.json();
-            // data[0].tasks[0].completed = true
-            // data[0].lectures[0].completed = true
             setModules(data);
-            console.log(data)
             // Инициализируем состояние развернутости для всех модулей
-            const initialExpandedState = data.reduce((acc, topic) => {
-                acc[topic.id] = false; // Все модули изначально свернуты
+            const initialExpandedState = data.reduce((acc, module) => {
+                acc[module.id] = false; // Все модули изначально свернуты
                 return acc;
             }, {});
             setExpandedModules(initialExpandedState);
@@ -43,10 +40,10 @@ const ModulesPage = () => {
     const filteredTopics =
         filter === "all"
             ? modules
-            : modules.filter((topic) =>
+            : modules.filter((module) =>
                 filter === "completed"
-                    ? topic.completed
-                    : !topic.completed
+                    ? module.completed
+                    : !module.completed
             );
 
     // Обработчик для разворачивания одного модуля
@@ -60,23 +57,25 @@ const ModulesPage = () => {
     // Обработчик для кнопки "Развернуть всё"
     const toggleAllModules = () => {
         const newExpandedState = !allExpanded;
-        setExpandedModules((prev) => {
-            const updatedState = {};
-            Object.keys(prev).forEach((id) => {
-                updatedState[id] = newExpandedState;
-            });
-            return updatedState;
-        });
+        
+        // Создаем новое состояние для всех модулей на основе данных `modules`
+        const updatedState = modules.reduce((acc, module) => {
+            acc[module.id] = newExpandedState;
+            return acc;
+        }, {});
+        console.log(updatedState, newExpandedState)
+    
+        setExpandedModules(updatedState);
         setAllExpanded(newExpandedState);
     };
 
 
-    const calculateProgress = (topic) => {
-        const total = 1 + topic.tasks.length + (topic.quizzes ? 1 : 0);
+    const calculateProgress = (module) => {
+        const total = module.lectures.length + module.tasks.length + module.quizzes.length;
         const completed =
-            topic.lectures.filter((l) => l.completed).length +
-            topic.tasks.filter((task) => task.completed).length +
-            topic.quizzes.filter((q) => q.completed).length;
+            module.lectures.filter((l) => l.completed).length +
+            module.tasks.filter((task) => task.completed).length +
+            module.quizzes.filter((q) => q.completed).length;
         return Math.round((completed / total) * 100);
     };
 
@@ -175,22 +174,22 @@ const ModulesPage = () => {
 
                 {/* Темы */}
                 <div>
-                    {filteredTopics.map((topic, index) => {
-                        const progress = calculateProgress(topic);
-                        const completedTasks = topic.tasks.filter((t) => t.completed).length;
-                        const completedLectures = topic.lectures.filter((l) => l.completed).length;
-                        const completedQuizzes = topic.quizzes.filter((q) => q.completed).length;
-                        const totalTasks = topic.tasks.length;
-                        const totalLectures = topic.lectures.length;
-                        const totalQuizzes = topic.quizzes.length;
+                    {filteredTopics.map((module) => {
+                        const progress = calculateProgress(module);
+                        const completedTasks = module.tasks.filter((t) => t.completed).length;
+                        const completedLectures = module.lectures.filter((l) => l.completed).length;
+                        const completedQuizzes = module.quizzes.filter((q) => q.completed).length;
+                        const totalTasks = module.tasks.length;
+                        const totalLectures = module.lectures.length;
+                        const totalQuizzes = module.quizzes.length;
 
                         return (
                             <div
-                                key={index}
+                                key={module.id}
                                 className="mb-6 p-4 border border-gray-300 rounded-md  shadow"
                             >
                                 <div className="flex justify-between items-center flex-wrap gap-4">
-                                    <h2 className="text-xl font-bold flex-grow">{topic.title}</h2>
+                                    <h2 className="text-lg font-bold flex-grow truncate">{module.title}</h2>
                                     <div className="flex items-center gap-4">
                                         <div className="flex items-center gap-4 text-sm font-medium">
                                             <div className="flex items-center gap-1">
@@ -237,15 +236,15 @@ const ModulesPage = () => {
                                     </div>
                                     <button
                                         className="btn btn-sm btn-outline w-24"
-                                        onClick={() => toggleModule(index)}
+                                        onClick={() => toggleModule(module.id)}
                                     >
-                                        {expandedModules[index] ? "Свернуть" : "Развернуть"}
+                                        {expandedModules[module.id] ? "Свернуть" : "Развернуть"}
                                     </button>
                                 </div>
 
-                                {expandedModules[index] && (
+                                {expandedModules[module.id] && (
                                     <div className="mt-4 space-y-2">
-                                        {topic.lectures.map((lecture, lectureIndex) => (
+                                        {module.lectures.map((lecture, lectureIndex) => (
                                             <div
                                                 key={lectureIndex}
                                                 className="flex items-center p-4 rounded-md border shadow">
@@ -273,10 +272,11 @@ const ModulesPage = () => {
                                                     lectureId={lecture.id}
                                                     isOpen={lectureModalStates[lecture.id] || false}
                                                     onClose={() => closeLectureModal(lecture.id)}
+                                                    setModules={setModules}
                                                 />
                                             </div>
                                         ))}
-                                        {topic.tasks.map((task, taskIndex) => (
+                                        {module.tasks.map((task, taskIndex) => (
                                             <div
                                                 key={taskIndex}
                                                 className="flex items-center p-4 rounded-md border shadow"
@@ -304,7 +304,7 @@ const ModulesPage = () => {
                                                 </TaskLink>
                                             </div>
                                         ))}
-                                        {topic.quizzes.map((quiz, taskIndex) => (
+                                        {module.quizzes.map((quiz, taskIndex) => (
                                             <div
                                                 key={taskIndex}
                                                 className="flex items-center p-4 rounded-md border shadow">
@@ -331,6 +331,7 @@ const ModulesPage = () => {
                                                     quizId={quiz.id}
                                                     isOpen={testModalStates[quiz.id] || false}
                                                     onClose={() => closeTestModal(quiz.id)}
+                                                    setModules={setModules}
                                                 />
                                             </div>
                                         ))}

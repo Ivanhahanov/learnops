@@ -1,34 +1,20 @@
 package courses
 
 import (
-	"fmt"
 	"platform/pkg/database"
 
 	"github.com/google/uuid"
 )
 
-func GetCourses(username string) []database.Course {
-	var courses = []database.Course{}
-	db := database.DbManager()
-	err := db.Find(&courses).Error
-	if err != nil {
-		fmt.Println(err)
+func GetLecture(lectureId string) (*database.Lecture, error) {
+	var lecture = database.Lecture{
+		ID: uuid.MustParse(lectureId),
 	}
-	return courses
+	err := database.DbManager().Select("content").First(&lecture).Error
+	return &lecture, err
 }
 
-// TODO
-// var defaultCourses = []string{"linux"}
-
-// func RegisterToDefaultCourses(user *database.User) {
-// 	db := database.DbManager()
-// 	for _, courseId := range defaultCourses {
-// 		user.Enrollments = append(user.Enrollments, &database.Enrollment{CourseID: courseId})
-// 	}
-// 	db.Save(user)
-// }
-
-// CourseProgressResponse представляет структуру ответа
+// CourseProgressResponse
 type CourseProgressResponse struct {
 	Title             string `json:"title"`
 	Name              string `json:"name"`
@@ -36,6 +22,7 @@ type CourseProgressResponse struct {
 	Category          string `json:"category"`
 	Difficulty        string `json:"difficulty"`
 	IsStarted         bool   `json:"is_started"`
+	IsCompleted       bool   `json:"is_completed"`
 	CompletedTasks    int    `json:"completed_tasks"`
 	TotalTasks        int    `json:"total_tasks"`
 	CompletedLectures int    `json:"completed_lectures"`
@@ -44,11 +31,11 @@ type CourseProgressResponse struct {
 	TotalQuizzes      int    `json:"total_quizzes"`
 }
 
-// GetCoursesWithProgress получает данные по прогрессу курсов для пользователя
+// GetCoursesWithProgress
 func GetCoursesWithProgress(userID uuid.UUID) ([]CourseProgressResponse, error) {
-	var responses []CourseProgressResponse
+	var responses = []CourseProgressResponse{}
 	db := database.DbManager()
-	// Получить все курсы, в которых пользователь зарегистрирован
+
 	var enrollments []database.Enrollment
 	err := db.Preload("Course.Modules.Lectures").
 		Preload("Course.Modules.Tasks").
@@ -60,7 +47,6 @@ func GetCoursesWithProgress(userID uuid.UUID) ([]CourseProgressResponse, error) 
 		return nil, err
 	}
 
-	// Обработать каждую регистрацию
 	for _, enrollment := range enrollments {
 		course := enrollment.Course
 		completedTasks := 0
@@ -70,9 +56,7 @@ func GetCoursesWithProgress(userID uuid.UUID) ([]CourseProgressResponse, error) 
 		completedQuizzes := 0
 		totalQuizzes := 0
 
-		// Пройтись по модулям курса
 		for _, module := range course.Modules {
-			// Задания
 			totalTasks += len(module.Tasks)
 			for _, task := range module.Tasks {
 				for _, progress := range enrollment.Progress {
@@ -81,8 +65,6 @@ func GetCoursesWithProgress(userID uuid.UUID) ([]CourseProgressResponse, error) 
 					}
 				}
 			}
-
-			// Лекции
 			totalLectures += len(module.Lectures)
 			for _, lecture := range module.Lectures {
 				for _, progress := range enrollment.Progress {
@@ -91,8 +73,6 @@ func GetCoursesWithProgress(userID uuid.UUID) ([]CourseProgressResponse, error) 
 					}
 				}
 			}
-
-			// Викторины
 			totalQuizzes += len(module.Quizzes)
 			for _, quiz := range module.Quizzes {
 				for _, progress := range enrollment.Progress {
@@ -103,20 +83,20 @@ func GetCoursesWithProgress(userID uuid.UUID) ([]CourseProgressResponse, error) 
 			}
 		}
 
-		// Добавить данные в ответ
 		responses = append(responses, CourseProgressResponse{
 			Title:             course.Title,
 			Name:              course.Name,
 			Description:       course.Description,
 			Category:          course.Category,
 			Difficulty:        course.Difficulty,
-			IsStarted:         completedTasks > 0 || completedLectures > 0 || completedQuizzes > 0,
 			CompletedTasks:    completedTasks,
 			TotalTasks:        totalTasks,
 			CompletedLectures: completedLectures,
 			TotalLectures:     totalLectures,
 			CompletedQuizzes:  completedQuizzes,
 			TotalQuizzes:      totalQuizzes,
+			IsStarted:         completedTasks > 0 || completedLectures > 0 || completedQuizzes > 0,
+			IsCompleted:       completedTasks == totalTasks && completedLectures == totalLectures && completedQuizzes == totalQuizzes,
 		})
 	}
 

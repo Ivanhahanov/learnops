@@ -58,7 +58,7 @@ const Legend = () => {
     const verifyChallenge = async () => {
         fetch(`/api/task/verify/${name}`,{
             headers: {
-                'Authorization': 'Bearer ' + String(user.id_token)
+                'Authorization': 'Bearer ' + user.id_token
             }
         })
             .then((res) => res.text())
@@ -114,7 +114,7 @@ const Legend = () => {
             <div className="divider px-4"></div>
             <div className="pb-3 pr-4 place-self-end">
                 <VerifyButton verifyStatus={verifyStatus} verifyChallenge={verifyChallenge} />
-                    <button onClick={() => handleSubmit()} className="btn btn-sm btn-outline btn-error">Close Session</button>
+                <button onClick={() => handleSubmit()} className="btn btn-sm btn-outline btn-error">Close Session</button>
             </div>
         </div>
     )

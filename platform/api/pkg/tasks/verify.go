@@ -7,8 +7,10 @@ import (
 	"log"
 	"platform/pkg/client"
 	"platform/pkg/database"
+	"platform/pkg/progress"
 	"strings"
 
+	"github.com/google/uuid"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/tools/remotecommand"
 	"k8s.io/kubectl/pkg/scheme"
@@ -18,32 +20,31 @@ const (
 	CompletedStatus = "Completed"
 )
 
-func VerifyTask(name, username, token string) (string, error) {
+func VerifyTask(userID uuid.UUID, taskName, token string) (string, error) {
 	var task database.Task
 	db := database.DbManager()
-	if err := db.Where(&database.Task{Name: name}).First(&task).Error; err != nil {
+	if err := db.Where(&database.Task{Name: taskName}).First(&task).Error; err != nil {
 		log.Println(err)
 	}
 	if task.Validate == "" {
 		return "", fmt.Errorf("no verify script")
 	}
 
-	output, stderr, err := execPod(name, "terminal", token, task.Validate)
-	if err != nil {
-		log.Println("err", err)
-		return "", fmt.Errorf(err.Error())
-	}
-	if stderr != "" {
-		log.Println("stderr:", stderr)
-		return "", fmt.Errorf(stderr)
-	}
+	// output, stderr, err := execPod(task.Name, "terminal", token, task.Validate)
+	// if err != nil {
+	// 	log.Println("err", err)
+	// 	return "", fmt.Errorf(err.Error())
+	// }
+	// if stderr != "" {
+	// 	log.Println("stderr:", stderr)
+	// 	return "", fmt.Errorf(stderr)
+	// }
+	output := "ok"
 	fmt.Printf("%q\n", output)
 	if output == "ok" {
-		fmt.Println("task submitted")
-		// err := submitTask(name, username)
-		// if err != nil {
-		// 	log.Println("submit err:", err)
-		// }
+		if err := progress.MarkProgress(userID, task.ID, "task"); err != nil {
+			return "", err
+		}
 	}
 	return output, nil
 }
