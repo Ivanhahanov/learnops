@@ -27,7 +27,7 @@ func handleWebSocket(c echo.Context) error {
 	controller.NewController(
 		c.QueryParam("name"),
 		c.QueryParam("token"),
-		c.Param("id"),
+		c.Param("name"),
 		"terminal",
 		conn,
 	).Watch()

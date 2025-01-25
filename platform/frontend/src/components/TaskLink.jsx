@@ -34,16 +34,14 @@ function TaskLink({ id, name, children, ...props }) {
     };
 
     const handleClick = (e) => {
-        if (taskInfo && taskInfo.id != id) {
-            e.preventDefault(); // Отменяем переход
+        if (taskInfo && taskInfo.name != name) {
+            e.preventDefault();
             setIsAlertOpen(true);
-        } else {
-            navigate(to); // Выполняем переход
         }
     };
     return (
         <>
-            <Link to={`/task/${name}`} onClick={handleClick} {...props}>
+            <Link to={`/task/${name}`} onClick={(e) => handleClick(e)} {...props}>
                 {children}
             </Link>
             <TaskAlert

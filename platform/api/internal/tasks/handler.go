@@ -10,7 +10,7 @@ import (
 )
 
 func Readme(c echo.Context) error {
-	taskId := c.Param("id")
+	taskId := c.Param("name")
 	return c.String(
 		http.StatusOK,
 		tasks.GetReadme(taskId),
@@ -18,7 +18,7 @@ func Readme(c echo.Context) error {
 }
 
 func RunTask(c echo.Context) error {
-	taskName := c.Param("id")
+	taskName := c.Param("name")
 
 	err := provider.InitCapsule(taskName, c.Get("name").(string), c.Get("token").(string)).Deploy()
 	if err != nil {
@@ -32,7 +32,7 @@ func RunTask(c echo.Context) error {
 }
 
 func StopTask(c echo.Context) error {
-	taskName := c.Param("id")
+	taskName := c.Param("name")
 	err := provider.InitCapsule(taskName,
 		c.Get("name").(string),
 		c.Get("token").(string)).Destroy()
@@ -46,13 +46,10 @@ func StopTask(c echo.Context) error {
 
 func VerifyTask(c echo.Context) error {
 	taskName := c.Param("name")
-	verdict, err := tasks.VerifyTask(
+	result := tasks.VerifyTask(
 		c.Get("user_id").(uuid.UUID),
 		taskName,
 		c.Get("token").(string),
 	)
-	if err != nil {
-		return c.String(http.StatusInternalServerError, err.Error())
-	}
-	return c.String(http.StatusOK, verdict)
+	return c.JSON(http.StatusOK, result)
 }

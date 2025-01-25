@@ -14,8 +14,6 @@ const Workspace = () => {
     const [sandboxUri, setSandboxUri] = useState(null); // URI для подключения
     const [sandboxStatus, setSandboxStatus] = useState("initial"); // initial, pending, ready, error
 
-    const [error, setError] = useState(null);
-
     const startSandbox = async (name) => {
         const response = await fetch(`/api/task/run/${name}`, {
             headers: {
@@ -29,15 +27,13 @@ const Workspace = () => {
     };
 
     const launchSandbox = useCallback(async () => {
-        setError(null);
         setSandboxStatus("pending");
         try {
             const { uri, status } = await startSandbox(name);
             setSandboxUri(uri);
             setSandboxStatus(status.toLowerCase());
         } catch (err) {
-            setError("Ошибка запуска песочницы");
-            setSandboxStatus("error");
+            console.log(err)
         }
     }, [name]);
 

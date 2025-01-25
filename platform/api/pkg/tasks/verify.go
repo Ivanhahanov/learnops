@@ -20,70 +20,43 @@ const (
 	CompletedStatus = "Completed"
 )
 
-func VerifyTask(userID uuid.UUID, taskName, token string) (string, error) {
+type VerifyTaskResponse struct {
+	Status string `json:"status,omitempty"`
+	Answer string `json:"answer,omitempty"`
+	Error  string `json:"error,omitempty"`
+}
+
+func VerifyTask(userID uuid.UUID, taskName, token string) *VerifyTaskResponse {
 	var task database.Task
+	var result = &VerifyTaskResponse{
+		Status: "failed",
+	}
+	var err error
 	db := database.DbManager()
-	if err := db.Where(&database.Task{Name: taskName}).First(&task).Error; err != nil {
+	if err := db.Where("name = ?", taskName).First(&task).Error; err != nil {
 		log.Println(err)
 	}
 	if task.Validate == "" {
-		return "", fmt.Errorf("no verify script")
+		result.Error = "no verify script"
+		return result
 	}
-
-	// output, stderr, err := execPod(task.Name, "terminal", token, task.Validate)
-	// if err != nil {
-	// 	log.Println("err", err)
-	// 	return "", fmt.Errorf(err.Error())
-	// }
-	// if stderr != "" {
-	// 	log.Println("stderr:", stderr)
-	// 	return "", fmt.Errorf(stderr)
-	// }
-	output := "ok"
-	fmt.Printf("%q\n", output)
-	if output == "ok" {
+	result.Answer, result.Error, err = execPod(taskName, "terminal", token, task.Validate)
+	if err != nil {
+		result.Error = err.Error()
+		return result
+	}
+	if result.Error != "" {
+		return result
+	}
+	if result.Answer == "ok" {
 		if err := progress.MarkProgress(userID, task.ID, "task"); err != nil {
-			return "", err
+			result.Error = err.Error()
+			return result
 		}
+		result.Status = "success"
 	}
-	return output, nil
+	return result
 }
-
-// func submitTask(taskName string, username string) error {
-
-// 	db := database.DbManager()
-
-// 	// Find user id
-// 	var user models.User
-// 	db.Where("name = ?", username).First(&user)
-
-// 	var taskStatus models.TaskStatus
-// 	err := db.Where("user_id = ? AND task_id = ?", user.ID, taskName).First(&taskStatus).Error
-// 	if err != nil {
-// 		if err == gorm.ErrRecordNotFound {
-// 			// Если записи нет, создаем новую
-// 			taskStatus = models.TaskStatus{
-// 				UserID: user.ID,
-// 				TaskID: taskName,
-// 				Status: CompletedStatus,
-// 			}
-// 			if err := db.Create(&taskStatus).Error; err != nil {
-// 				return fmt.Errorf("Failed to save task status")
-// 			}
-// 		} else {
-// 			return fmt.Errorf("Database error")
-// 		}
-// 	} else {
-// 		// Если запись уже существует, обновляем статус
-// 		taskStatus.Status = CompletedStatus
-// 		taskStatus.UpdatedAt = time.Now()
-// 		if err := db.Save(&taskStatus).Error; err != nil {
-// 			return fmt.Errorf("Failed to update task status")
-// 		}
-// 	}
-// 	return nil
-// }
-
 func execPod(ns, name, token, command string) (string, string, error) {
 	c := client.Init(token)
 	buf := &bytes.Buffer{}

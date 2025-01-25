@@ -1,13 +1,12 @@
 import { Navigate } from "react-router-dom";
 import { useAuth } from "../context/OAuthContext";
 
-const ProtectedRoute = ({children, redirectPath = '/'}) => {
+const ProtectedRoute = ({ children, redirectPath = '/' }) => {
     const { user, loading } = useAuth()
-    
+
     if (loading) {
         return <div>Loading...</div>;
-      }
-      console.log(user, loading)
+    }
     if (!user) {
         return <Navigate to={redirectPath} replace />;
     }

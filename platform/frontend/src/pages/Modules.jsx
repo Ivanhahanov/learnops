@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import LectureModal from "../components/LectureModal";
 import QuizModal from "../components/QuizModal";
 import { useAuth } from "../context/OAuthContext";
-import { useParams } from "react-router-dom";
+import { useParams, useLocation } from "react-router-dom";
 import TaskLink from "../components/TaskLink";
 
 const ModulesPage = () => {
@@ -11,7 +11,10 @@ const ModulesPage = () => {
     const [expandedModules, setExpandedModules] = useState({});
     const [allExpanded, setAllExpanded] = useState(false);
     const { name } = useParams();
-    const fetchTopics = async () => {
+
+    const location = useLocation();
+
+    const fetchModules = async () => {
         try {
             const response = await fetch(`/api/course/${name}`, {
                 headers: {
@@ -30,14 +33,15 @@ const ModulesPage = () => {
             console.error("Ошибка при загрузке данных:", error);
         }
     };
-
+    // hack: if use navigate(-1) reload modules info
     useEffect(() => {
-        fetchTopics();
-    }, []);
+        console.log('update')
+        fetchModules();
+    }, [location.state]);
 
     const [filter, setFilter] = useState("all");
 
-    const filteredTopics =
+    const filteredModules =
         filter === "all"
             ? modules
             : modules.filter((module) =>
@@ -57,14 +61,14 @@ const ModulesPage = () => {
     // Обработчик для кнопки "Развернуть всё"
     const toggleAllModules = () => {
         const newExpandedState = !allExpanded;
-        
+
         // Создаем новое состояние для всех модулей на основе данных `modules`
         const updatedState = modules.reduce((acc, module) => {
             acc[module.id] = newExpandedState;
             return acc;
         }, {});
         console.log(updatedState, newExpandedState)
-    
+
         setExpandedModules(updatedState);
         setAllExpanded(newExpandedState);
     };
@@ -174,7 +178,7 @@ const ModulesPage = () => {
 
                 {/* Темы */}
                 <div>
-                    {filteredTopics.map((module) => {
+                    {filteredModules.map((module) => {
                         const progress = calculateProgress(module);
                         const completedTasks = module.tasks.filter((t) => t.completed).length;
                         const completedLectures = module.lectures.filter((l) => l.completed).length;

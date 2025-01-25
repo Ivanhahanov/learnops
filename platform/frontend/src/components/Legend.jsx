@@ -1,24 +1,21 @@
+import React from 'react'
 import ReactMarkdown from 'react-markdown'
-import rehypeHighlight from 'rehype-highlight'
 import remarkGfm from 'remark-gfm'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
-import { a11yDark, dark, atomDark, materialDark } from 'react-syntax-highlighter/dist/cjs/styles/prism'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { atomDark } from 'react-syntax-highlighter/dist/cjs/styles/prism'
 import 'font-awesome/css/font-awesome.min.css';
-
-
-import { useState, useEffect, useContext } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
-import React from 'react'
+import { useState, useEffect } from 'react'
+import { useNavigate, useParams } from 'react-router-dom'
 import "../index.css"
 import { useAuth } from '../context/OAuthContext'
 import { useTask } from '../context/TaskContext'
+import confetti from "canvas-confetti";
 
 const Legend = () => {
-    const {name} = useParams()
-    const {user} = useAuth()
+    const { name } = useParams()
+    const { user } = useAuth()
     const [text, setText] = useState(String);
-    const {stopTask} = useTask()
+    const { stopTask } = useTask()
     useEffect(() => {
         fetch(`/api/task/readme/${name}`, {
             headers: {
@@ -27,7 +24,6 @@ const Legend = () => {
         })
             .then((res) => res.text())
             .then((data) => {
-                console.log(data);
                 setText(data);
             })
             .catch((err) => {
@@ -37,7 +33,7 @@ const Legend = () => {
     const navigate = useNavigate();
 
     const handleSubmit = async () => {
-        fetch(`/api/task/stop/${name}`,{
+        fetch(`/api/task/stop/${name}`, {
             headers: {
                 'Authorization': 'Bearer ' + String(user.id_token)
             }
@@ -46,25 +42,7 @@ const Legend = () => {
             .then((data) => {
                 stopTask()
                 console.log(data);
-                navigate(-1);
-            })
-            .catch((err) => {
-                console.log(err.message);
-            });
-    };
-
-    const [verifyStatus, setVerifyStatus] = useState(String);
-
-    const verifyChallenge = async () => {
-        fetch(`/api/task/verify/${name}`,{
-            headers: {
-                'Authorization': 'Bearer ' + user.id_token
-            }
-        })
-            .then((res) => res.text())
-            .then((data) => {
-                console.log(data);
-                setVerifyStatus(data);
+                navigate(-1, { state: { message: "message" },  replace: true });
             })
             .catch((err) => {
                 console.log(err.message);
@@ -112,19 +90,98 @@ const Legend = () => {
             </ReactMarkdown>
 
             <div className="divider px-4"></div>
-            <div className="pb-3 pr-4 place-self-end">
-                <VerifyButton verifyStatus={verifyStatus} verifyChallenge={verifyChallenge} />
+            <div className="pb-3 px-4 flex justify-between w-full">
+                <VerifyButton name={name} user={user} />
                 <button onClick={() => handleSubmit()} className="btn btn-sm btn-outline btn-error">Close Session</button>
             </div>
         </div>
     )
 }
 
-function VerifyButton({ verifyStatus, verifyChallenge }) {
-    if (verifyStatus != "") {
-        return <button className="btn btn-sm btn-success mx-2">Success!</button>
-    }
-    return <button className="btn btn-sm btn-outline btn-success mx-2" onClick={verifyChallenge}>Verify Challenge</button>
+function VerifyButton({ name, user }) {
+    const [verifyStatus, setVerifyStatus] = useState(null);
+    const [alertMessage, setAlertMessage] = useState("");
+
+    const verifyChallenge = async () => {
+        try {
+            const response = await fetch(`/api/task/verify/${name}`, {
+                headers: {
+                    Authorization: `Bearer ${user.id_token}`,
+                },
+            });
+
+            const data = await response.json(); // Предполагается, что ответ в формате JSON
+            console.log(data);
+
+            if (data.status === "success") {
+                setVerifyStatus("success");
+                setAlertMessage(""); 
+                confetti({
+                    particleCount: 100,
+                    spread: 70,
+                    origin: { y: 0.6 }
+                  });
+            } else if (data.status === "failed") {
+                setAlertMessage(data.answer || "Verification failed.");
+                setVerifyStatus("failed");
+            }
+        } catch (error) {
+            console.error("Error verifying challenge:", error.message);
+            setAlertMessage("An error occurred while verifying.");
+        }
+    };
+
+    // Для автоматического скрытия алерта через несколько секунд
+    useEffect(() => {
+        if (alertMessage) {
+            const timer = setTimeout(() => {
+                setAlertMessage(""); // Скрыть alert через 5 секунд
+            }, 5000); // 5000 миллисекунд = 5 секунд
+
+            return () => clearTimeout(timer); // Очистить таймер, если компонент размонтируется
+        }
+    }, [alertMessage]);
+
+    return (
+        <div>
+            {verifyStatus === "success" ? (
+                <button className="btn btn-sm btn-success mx-2">Success!</button>
+            ) : (
+                <button
+                    className="btn btn-sm btn-outline btn-success mx-2"
+                    onClick={verifyChallenge}
+                >
+                    Verify Challenge
+                </button>
+            )}
+
+            {/* Alert */}
+            {alertMessage && (
+                <div
+                    role="alert"
+                    className="alert alert-warning shadow-lg fixed top-4 left-1/2 transform -translate-x-1/2 z-50 w-1/3"
+                >
+                    <div className="flex items-center">
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="stroke-current flex-shrink-0 h-6 w-6"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M13 16h-1v-4h-1m0-4h.01M12 19a7 7 0 110-14 7 7 0 010 14z"
+                            />
+                        </svg>
+                        <span>{alertMessage}</span>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
 }
 
 

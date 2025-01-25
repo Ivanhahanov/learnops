@@ -11,10 +11,10 @@ func RegisterRoutes(e *echo.Echo) {
 	task.Use(
 		auth.KeycloakTokenToContextMiddleware,
 	)
-	task.GET("/readme/:id", Readme)
-	task.GET("/run/:id", RunTask)
-	task.GET("/stop/:id", StopTask)
-	task.GET("/verify/:id", VerifyTask)
+	task.GET("/readme/:name", Readme)
+	task.GET("/run/:name", RunTask)
+	task.GET("/stop/:name", StopTask)
+	task.GET("/verify/:name", VerifyTask)
 	// INFO: maybe can ignore middleware
-	e.GET("/api/status/:id", handleWebSocket)
+	e.GET("/api/status/:name", handleWebSocket)
 }
