@@ -2,8 +2,28 @@ import { Link } from "react-router-dom";
 import { useAuth } from "../../context/OAuthContext";
 import TaskStatusIndicator from "../TaskStatusIndicator";
 
+
+import { useEffect, useState } from "react";
+
 const Header = () => {
     let { user, logout } = useAuth()
+    const [theme, setTheme] = useState(
+        localStorage.getItem("theme") || "light" // По умолчанию светлая тема
+    );
+
+    useEffect(() => {
+        const root = document.documentElement;
+        if (theme === "dark") {
+            root.classList.add("dark");
+        } else {
+            root.classList.remove("dark");
+        }
+        localStorage.setItem("theme", theme);
+    }, [theme]);
+
+    const toggleTheme = () => {
+        setTheme((prevTheme) => (prevTheme === "dark" ? "light" : "dark"));
+    };
     return (
         <header>
             <nav className="navbar border-b border-gray-500   min-h-0">
@@ -21,7 +41,7 @@ const Header = () => {
                 <div className="flex-none">
                     <label className="swap swap-rotate">
                         {/* this hidden checkbox controls the state */}
-                        <input type="checkbox" className="theme-controller" value="light" />
+                        <input type="checkbox" onChange={toggleTheme} className="theme-controller" checked={theme === "light"} value="light"/>
                         {/* moon icon */}
                         <svg
                             className="swap-on h-8 w-8 fill-current"

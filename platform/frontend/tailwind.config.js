@@ -47,7 +47,7 @@ export default {
     ],
   },
   
-  darkMode: ['selector', '[data-theme="light"]'],
+  //darkMode: ['selector', '[data-theme="light"]'],
   plugins: [daisyui, typography],
 }
 
