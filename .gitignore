@@ -10,3 +10,4 @@ resources/
 .hugo_build.lock
 
 learnops
+oidc_token.json
