@@ -78,10 +78,7 @@ helm install \
   --namespace cert-manager \
   --create-namespace \
   --set installCRDs=true
-helm upgrade trust-manager jetstack/trust-manager \
-  --install \
-  --namespace cert-manager \
-  --wait
+
 cat <<EOF | kubectl apply -f -
 ---
 apiVersion: cert-manager.io/v1
@@ -91,23 +88,6 @@ metadata:
 spec:
   ca:
     secretName: ca-key-pair
----
-apiVersion: trust.cert-manager.io/v1alpha1
-kind: Bundle
-metadata:
-  name: example-bundle
-spec:
-  sources:
-  - useDefaultCAs: true
-  - secret:
-      name: "ca-key-pair"
-      key: "tls.crt"
-  target:
-    configMap:
-      key: "ca-certificates.crt"
-    namespaceSelector:
-      matchLabels:
-        trust: enabled
 EOF
 kubectl apply -f https://kind.sigs.k8s.io/examples/ingress/deploy-ingress-nginx.yaml
 
@@ -117,7 +97,9 @@ kubectl apply -f https://kind.sigs.k8s.io/examples/ingress/deploy-ingress-nginx.
 
 # install capsule
 helm install capsule oci://ghcr.io/projectcapsule/charts/capsule --version 0.7.0  -n capsule-system --create-namespace
-helm install capsule-proxy oci://ghcr.io/projectcapsule/charts/capsule-proxy -n capsule-system
+# helm install capsule-proxy oci://ghcr.io/projectcapsule/charts/capsule-proxy -n capsule-system
+
+kubectl wait --for=condition=Ready pod -n capsule-system  -l app.kubernetes.io/instance=capsule --timeout=100s
 
 helm upgrade --install keycloak --wait --timeout 15m \
   --namespace keycloak --create-namespace \
@@ -234,7 +216,11 @@ resource "keycloak_openid_client" "kube" {
   name                         = "kube"
   enabled                      = true
   access_type                  = "PUBLIC"
-  valid_redirect_uris          = ["https://DOMAIN/oauth/callback", "https://DOMAIN"]
+  valid_redirect_uris          = [
+    "https://learnops.local/oauth/callback", 
+    "https://learnops.local", 
+    "http://localhost:8888/callback",
+  ]
   standard_flow_enabled        = true
   implicit_flow_enabled        = false
   direct_access_grants_enabled = true
@@ -263,5 +249,25 @@ kubectl apply -f ../deploy/cockroachdb-statefulset.yaml -f ../deploy/k8s
 
 kubectl wait --for=condition=Ready pod -l app=api --timeout=30s
 
-learnops upload -c tasks.yml
-learnops upload -c git.yml
+echo """
+# Next steps
+
+# Add cert to trust (MacOS)
+sudo security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain .ssl/root-ca.pem
+
+# Login as learnops-admin:learnops-admin
+learnops login
+
+# Upload courses
+learnops upload -c courses/linux-basic/course.yml 
+learnops upload -c demo/courses/git/course.yml
+
+# Open https://learnops.local in private mode (or logout from keycloak learnops-admin)
+
+# Login as user:user
+
+# Assign course for user
+learnops assign -u user -c linux-basic -c git-basic
+
+# Done!
+"""
