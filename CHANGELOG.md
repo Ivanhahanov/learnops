@@ -1,3 +1,10 @@
+## [0.1.1](https://github.com/Ivanhahanov/learnops/compare/v0.1.0...v0.1.1) (2025-01-26)
+
+
+### Bug Fixes
+
+* update README.md ([339be37](https://github.com/Ivanhahanov/learnops/commit/339be37d0c7dd52de1aa203a1f10cd2989d07b3f))
+
 # [0.1.0](https://github.com/Ivanhahanov/learnops/compare/v0.0.0...v0.1.0) (2025-01-26)
 
 
