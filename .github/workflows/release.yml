@@ -1,47 +1,57 @@
-name: goreleaser
-
+name: Release
 on:
-  workflow_run:
-    workflows:
-      - semantic-release
-    types:
-      - completed
-
-permissions:
-  contents: write
-  # packages: write
-  # issues: write
-  # id-token: write
+  push:
+    branches:
+      - main
 
 jobs:
-  goreleaser:
+  release:
+    name: Release
     runs-on: ubuntu-latest
     environment:
       name: semver
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - name: Log in to Docker Hub
-        uses: docker/login-action@f4ef78c080cd8ba55a85445d5b36e214a81df20a
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: stable
-      # More assembly might be required: Docker logins, GPG, etc.
-      # It all depends on your needs.
-      - name: Run GoReleaser
-        uses: goreleaser/goreleaser-action@v6
-        with:
-          # either 'goreleaser' (default) or 'goreleaser-pro'
-          distribution: goreleaser
-          # 'latest', 'nightly', or a semver
-          version: "~> v2"
-          args: release --clean
-          workdir: platform/api
-        env:
-          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        persist-credentials: false
+    - name: Semantic Release
+      uses: cycjimmy/semantic-release-action@v4
+      id: semantic
+      env:
+        GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+
+    - name: Log in to Docker Hub
+      if: steps.semantic.outputs.new_release_published == 'true'
+      uses: docker/login-action@f4ef78c080cd8ba55a85445d5b36e214a81df20a
+      with:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+        
+    - name: Set up Go
+      if: steps.semantic.outputs.new_release_published == 'true'
+      uses: actions/setup-go@v5
+      with:
+        go-version: stable
+    # More assembly might be required: Docker logins, GPG, etc.
+    # It all depends on your needs.
+    - name: Run GoReleaser
+      if: steps.semantic.outputs.new_release_published == 'true'
+      uses: goreleaser/goreleaser-action@v6
+      with:
+        # either 'goreleaser' (default) or 'goreleaser-pro'
+        distribution: goreleaser
+        # 'latest', 'nightly', or a semver
+        version: "~> v2"
+        args: release --clean
+        workdir: platform/api
+      env:
+        GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+    - name: Build and push frontend
+      uses: docker/build-push-action@v6
+      with:
+        context: platform/frontend
+        push: true
+        tags: 
+         - explabs/platform-ui:latest
+         - explabs/platform-ui:${{ steps.semantic.outputs.new_release_version }}
