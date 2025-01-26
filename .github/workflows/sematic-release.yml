@@ -18,24 +18,6 @@ jobs:
     - name: Semantic Release
       uses: cycjimmy/semantic-release-action@v4
       id: semantic
-      with:
-        branches: |
-            [
-              '+([0-9])?(.{+([0-9]),x}).x',
-              'main',
-              'ci',
-              {
-                name: 'beta',
-                prerelease: true
-              },
-              {
-                name: 'alpha',
-                prerelease: true
-              }
-            ]
-        extra_plugins: |
-          @semantic-release/changelog@6.0.0
-          @semantic-release/git
       env:
         GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
   
