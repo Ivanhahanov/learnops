@@ -3,7 +3,7 @@ name: goreleaser
 on:
   workflow_run:
     workflows:
-      - Release # Имя workflow из первого шага
+      - semantic-release
     types:
       - completed
 
