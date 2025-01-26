@@ -52,6 +52,6 @@ jobs:
       with:
         context: platform/frontend
         push: true
-        tags: 
-         - explabs/platform-ui:latest
-         - explabs/platform-ui:${{ steps.semantic.outputs.new_release_version }}
+        tags: |
+          explabs/platform-ui:latest
+          explabs/platform-ui:${{ steps.semantic.outputs.new_release_version }}
