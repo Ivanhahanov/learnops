@@ -1,3 +1,11 @@
+# [0.2.0](https://github.com/Ivanhahanov/learnops/compare/v0.1.1...v0.2.0) (2025-01-27)
+
+
+### Features
+
+* add clenup controller ([2742379](https://github.com/Ivanhahanov/learnops/commit/274237933e7b1b115ab93ce7bcc807d6f1a56c14))
+* add ordering for course materials ([1caffb0](https://github.com/Ivanhahanov/learnops/commit/1caffb0119f0ece46fe2945b71d08561c02dccae))
+
 ## [0.1.1](https://github.com/Ivanhahanov/learnops/compare/v0.1.0...v0.1.1) (2025-01-26)
 
 
