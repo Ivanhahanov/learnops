@@ -1,5 +1,4 @@
-import { Link } from "react-router-dom";
-import { useState, useEffect, useContext } from 'react'
+import { useState, useEffect } from 'react'
 import '../index.css'
 import { useAuth } from "../context/OAuthContext";
 import CourseCard from "../components/CourseCard";
