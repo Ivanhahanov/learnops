@@ -46,5 +46,5 @@ func AssignCoursesToUser(cmd *cli.Command) {
 	}
 	defer response.Body.Close()
 	body, _ := io.ReadAll(response.Body)
-	fmt.Println("response Body:", string(body))
+	fmt.Println("response:", string(body))
 }

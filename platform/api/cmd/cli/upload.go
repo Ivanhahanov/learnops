@@ -40,9 +40,8 @@ func (c *Course) Upload(cmd *cli.Command) {
 		panic(error)
 	}
 	defer response.Body.Close()
-	fmt.Println(response.StatusCode)
 	body, _ := io.ReadAll(response.Body)
-	fmt.Println("response Body:", string(body))
+	fmt.Println("response:", string(body))
 }
 
 func (c *Course) EnrichFiles() {
@@ -61,7 +60,6 @@ func (c *Course) EnrichFiles() {
 			quiz.Questions = c.readQuiz(module.Name, quiz.Name)
 		}
 	}
-	fmt.Println(c.Course)
 }
 
 func (c *Course) getTaskText(module, name string) string {

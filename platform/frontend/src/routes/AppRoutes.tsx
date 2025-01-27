@@ -4,7 +4,6 @@ import TaskPage from "../pages/Task";
 import { createBrowserRouter } from 'react-router-dom';
 import React from "react";
 import HomePage from "../pages/Home";
-import AdminPanel from "../pages/Admin";
 import OAuthCallback from "../pages/OAuthCallback";
 import ProtectedRoute from "./ProtectedRoute";
 import { useNavigate } from "react-router-dom";
@@ -60,10 +59,6 @@ const router = createBrowserRouter([
                 path: 'task/:name',
                 element: <ProtectedRoute><TaskPage /></ProtectedRoute>,
             },
-            // {
-            //     path: 'admin',
-            //     element: <ProtectedRoute><AdminPanel /></ProtectedRoute>,
-            // },
         ],
     },
     {
