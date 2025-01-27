@@ -75,8 +75,8 @@ const LectureModal = ({ lectureId, isOpen, onClose, setModules }) => {
       setModules((prevModules) =>
         prevModules.map((module) => ({
           ...module,
-          lectures: module.lectures.map((lecture) =>
-            lecture.id === lectureId ? { ...lecture, completed: true } : lecture
+          data: module.data.map((row) =>
+            row.id === lectureId ? { ...row, completed: true } : row
           ),
         }))
       );

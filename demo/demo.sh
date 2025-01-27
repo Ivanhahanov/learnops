@@ -7,18 +7,18 @@ TEMP_SSL_DIR=".ssl"
 CLUSTER_NAME="kind"
 
 
-echo "# do some clean up"
-rm -rf ${TEMP_SSL_DIR}
+# echo "# do some clean up"
+# rm -rf ${TEMP_SSL_DIR}
 
-echo "# create a folder to store certificates"
-mkdir -p ${TEMP_SSL_DIR}
+# echo "# create a folder to store certificates"
+# mkdir -p ${TEMP_SSL_DIR}
 
-echo "# generate an rsa key"
-openssl genrsa -out .ssl/root-ca-key.pem 2048
+# echo "# generate an rsa key"
+# openssl genrsa -out .ssl/root-ca-key.pem 2048
 
-echo "# generate root certificate"
-openssl req -x509 -new -nodes -key .ssl/root-ca-key.pem \
-  -days 3650 -sha256 -out .ssl/root-ca.pem -subj "/CN=kube-ca"
+# echo "# generate root certificate"
+# openssl req -x509 -new -nodes -key .ssl/root-ca-key.pem \
+#   -days 3650 -sha256 -out .ssl/root-ca.pem -subj "/CN=kube-ca"
 
 if kind get clusters | grep -q "$CLUSTER_NAME"; then
   echo "Kind cluster $CLUSTER_NAME exists. Deleting..."
@@ -99,7 +99,8 @@ kubectl apply -f https://kind.sigs.k8s.io/examples/ingress/deploy-ingress-nginx.
 helm install capsule oci://ghcr.io/projectcapsule/charts/capsule --version 0.7.0  -n capsule-system --create-namespace
 # helm install capsule-proxy oci://ghcr.io/projectcapsule/charts/capsule-proxy -n capsule-system
 
-kubectl wait --for=condition=Ready pod -n capsule-system  -l app.kubernetes.io/instance=capsule --timeout=100s
+kubectl wait --namespace ingress-nginx --for=condition=ready pod --selector=app.kubernetes.io/component=controller --timeout=120s
+kubectl wait --namespace capsule-system --for=condition=ready pod --selector=app.kubernetes.io/instance=capsule --timeout=100s
 
 helm upgrade --install keycloak --wait --timeout 15m \
   --namespace keycloak --create-namespace \
@@ -163,9 +164,10 @@ provider "keycloak" {
 }
 locals {
   realm_id = "master"
-  groups   = ["kube-dev", "projectcapsule.dev"]
+  groups   = ["learnops-admin, "projectcapsule.dev"]
   user_groups = {
-    user   = ["kube-dev", "projectcapsule.dev"]
+    user   = ["projectcapsule.dev"]
+    learnops-admin  = ["learnops-admin"]
   }
 }
 # create groups
@@ -243,11 +245,25 @@ sed -i.bak "s/DOMAIN/$DOMAIN/g" keycloak.tf
 
 echo "# Apply the terraform config"
 TF_CLI_CONFIG_FILE=".tofurc" tofu init && tofu apply -auto-approve
-kubectl label namespaces default trust=enabled
-echo "# Setup platform"
-kubectl apply -f ../deploy/cockroachdb-statefulset.yaml -f ../deploy/k8s
 
-kubectl wait --for=condition=Ready pod -l app=api --timeout=30s
+
+echo "# Setup platform"
+helm upgrade --install crdb cockroachdb -n learnops --create-namespace --repo https://charts.cockroachdb.com/ --values - <<EOF
+conf:
+  single-node: true
+  
+tls:
+  enabled: false
+
+statefulset:
+  replicas: 1
+
+storage:
+  persistentVolume:
+    size: 1Gi
+EOF
+
+helm upgrade -i learnops -n learnops --create-namespace oci://registry-1.docker.io/explabs/learnops
 
 echo """
 # Next steps
@@ -260,7 +276,7 @@ learnops login
 
 # Upload courses
 learnops upload -c courses/linux-basic/course.yml 
-learnops upload -c demo/courses/git/course.yml
+learnops upload -c courses/git/course.yml
 
 # Open https://learnops.local in private mode (or logout from keycloak learnops-admin)
 
