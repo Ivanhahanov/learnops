@@ -1,3 +1,10 @@
+# [0.3.0](https://github.com/Ivanhahanov/learnops/compare/v0.2.0...v0.3.0) (2025-01-27)
+
+
+### Features
+
+* add chart builder ([1c6ab41](https://github.com/Ivanhahanov/learnops/commit/1c6ab41007c6a6a05156ac446cf34c6407dfba83))
+
 # [0.2.0](https://github.com/Ivanhahanov/learnops/compare/v0.1.1...v0.2.0) (2025-01-27)
 
 
