@@ -66,54 +66,55 @@ const Courses = () => {
         <div className="container mx-auto p-6">
             <div className="flex">
                 {/* Боковая панель с фильтрами */}
-                <aside className="w-1/5 p-4">
+                <div className="w-1/5 p-4">
                     <h2 className="text-lg font-semibold mb-4">Фильтры</h2>
+                    <div className="card bg-base-100 shadow border border-base-300 p-4">
+                        {/* Фильтр по категориям */}
+                        <FilterSection
+                            title="Категории"
+                            options={categories}
+                            selectedOptions={selectedCategories}
+                            onToggle={(category) =>
+                                toggleFilter(selectedCategories, category, setSelectedCategories)
+                            }
+                        />
 
-                    {/* Фильтр по категориям */}
-                    <FilterSection
-                        title="Категории"
-                        options={categories}
-                        selectedOptions={selectedCategories}
-                        onToggle={(category) =>
-                            toggleFilter(selectedCategories, category, setSelectedCategories)
-                        }
-                    />
+                        {/* Фильтр по уровню сложности */}
+                        <FilterSection
+                            title="Сложность"
+                            options={difficulties}
+                            selectedOptions={selectedDifficulties}
+                            onToggle={(difficulty) =>
+                                toggleFilter(selectedDifficulties, difficulty, setSelectedDifficulties)
+                            }
+                        />
 
-                    {/* Фильтр по уровню сложности */}
-                    <FilterSection
-                        title="Сложность"
-                        options={difficulties}
-                        selectedOptions={selectedDifficulties}
-                        onToggle={(difficulty) =>
-                            toggleFilter(selectedDifficulties, difficulty, setSelectedDifficulties)
-                        }
-                    />
-
-                    {/* Фильтр по статусу выполнения */}
-                    <div className="mb-4">
-                        <h3 className="text-sm font-medium mb-2">Статус выполнения</h3>
-                        {[
-                            { label: "Все", value: null },
-                            { label: "Выполненные", value: "completed" },
-                            { label: "В процессе", value: "in_progress" },
-                            { label: "Не начатые", value: "not_started" },
-                        ].map((status, index) => (
-                            <label
-                                key={`status-${index}`} // Уникальный ключ
-                                className="flex items-center mb-2 space-x-2"
-                            >
-                                <input
-                                    type="radio"
-                                    className="radio radio-primary"
-                                    checked={statusFilter === status.value}
-                                    onChange={() => setStatusFilter(status.value)}
-                                />
-                                <span>{status.label}</span>
-                            </label>
-                        ))}
+                        {/* Фильтр по статусу выполнения */}
+                        <div className="mb-4">
+                            <h3 className="text-sm font-medium mb-2">Статус выполнения</h3>
+                            {[
+                                { label: "Все", value: null },
+                                { label: "Выполненные", value: "completed" },
+                                { label: "В процессе", value: "in_progress" },
+                                { label: "Не начатые", value: "not_started" },
+                            ].map((status, index) => (
+                                <label
+                                    key={`status-${index}`} // Уникальный ключ
+                                    className="flex items-center mb-2 space-x-2"
+                                >
+                                    <input
+                                        type="radio"
+                                        className="radio radio-primary"
+                                        checked={statusFilter === status.value}
+                                        onChange={() => setStatusFilter(status.value)}
+                                    />
+                                    <span>{status.label}</span>
+                                </label>
+                            ))}
+                        </div>
                     </div>
 
-                </aside>
+                </div>
 
                 {/* Основной контент с карточками курсов */}
                 <main className="w-4/5 p-4">

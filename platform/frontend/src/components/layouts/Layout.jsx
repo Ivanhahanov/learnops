@@ -10,7 +10,7 @@ const Layout = () => {
       <AuthProvider>
         <TaskProvider>
           <Header />
-          <main className="flex-grow">
+          <main className="flex-grow bg-base-200">
 
             <Outlet></Outlet>
 

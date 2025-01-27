@@ -57,7 +57,7 @@ const Legend = () => {
 
 
     return (
-        <div className="bg-base-200 shadow p-2 rounded-xl overflow-y-auto h-[calc(100vh-5rem)]">
+        <div className="bg-base-100 shadow p-4 rounded-xl overflow-y-auto h-[calc(100vh-5rem)]">
             <ReactMarkdown
                 className='prose pt-3 mx-auto'
                 //linkTarget='_blank'
@@ -101,8 +101,9 @@ const Legend = () => {
 function VerifyButton({ name, user }) {
     const [verifyStatus, setVerifyStatus] = useState(null);
     const [alertMessage, setAlertMessage] = useState("");
-
+    const [loading, setLoading] = useState(false)
     const verifyChallenge = async () => {
+        setLoading(true)
         try {
             const response = await fetch(`/api/task/verify/${name}`, {
                 headers: {
@@ -111,8 +112,7 @@ function VerifyButton({ name, user }) {
             });
 
             const data = await response.json(); // Предполагается, что ответ в формате JSON
-            console.log(data);
-
+            setLoading(false)
             if (data.status === "success") {
                 setVerifyStatus("success");
                 setAlertMessage(""); 
@@ -144,16 +144,20 @@ function VerifyButton({ name, user }) {
 
     return (
         <div>
-            {verifyStatus === "success" ? (
-                <button className="btn btn-sm btn-success mx-2">Success!</button>
-            ) : (
-                <button
-                    className="btn btn-sm btn-outline btn-success mx-2"
-                    onClick={verifyChallenge}
-                >
-                    Verify Challenge
-                </button>
-            )}
+           {loading ? (
+            <button className="btn btn-sm btn-outline btn-success mx-2" disabled>
+              Checking...
+            </button>
+          ) : verifyStatus === "success" ? (
+            <button className="btn btn-sm btn-success mx-2">Success!</button>
+          ) : (
+            <button
+              className="btn btn-sm btn-outline btn-success mx-2"
+              onClick={verifyChallenge}
+            >
+              Verify Challenge
+            </button>
+          )}
 
             {/* Alert */}
             {alertMessage && (

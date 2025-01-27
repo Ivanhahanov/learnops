@@ -26,7 +26,7 @@ const Header = () => {
     };
     return (
         <header>
-            <nav className="navbar border-b border-gray-500   min-h-0">
+            <nav className="navbar border-b border-base-200   min-h-0">
                 <div className="flex-1">
                     <a className="btn btn btn-ghost text-xl">LearnOps</a>
                     {user &&

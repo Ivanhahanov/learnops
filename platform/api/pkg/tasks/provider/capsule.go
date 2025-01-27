@@ -42,8 +42,10 @@ func InitCapsule(tenant, user, token string) *Capsule {
 	if err != nil {
 		log.Fatalf("Ошибка создания клиента Capsule: %v", err)
 	}
-	c := k8s_client.Init(token)
-	capsule.ClientSet = c.UserClient
+	if token != "" {
+		c := k8s_client.Init(token)
+		capsule.ClientSet = c.UserClient
+	}
 	return capsule
 }
 
@@ -238,6 +240,15 @@ func (capsule *Capsule) Destroy() error {
 		return err
 	}
 	return nil
+}
+
+func (capsule *Capsule) List() (*capsulev1beta2.TenantList, error) {
+	tenants := &capsulev1beta2.TenantList{}
+	err := capsule.Client.List(context.Background(), tenants)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list tenants: %v", err)
+	}
+	return tenants, nil
 }
 
 func (capsule *Capsule) WaitForNamespaceInTenant(namespace string, timeout time.Duration) error {
