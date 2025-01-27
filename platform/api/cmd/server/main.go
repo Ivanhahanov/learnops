@@ -11,13 +11,16 @@ import (
 	"platform/pkg/utils"
 	"time"
 
+	"github.com/go-logr/logr"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	"sigs.k8s.io/controller-runtime/pkg/log"
 )
 
 func main() {
 	database.Init()
 	e := echo.New()
+	log.SetLogger(logr.Logger{})
 	e.Use(
 		middleware.Logger(),
 		middleware.RequestID(),
@@ -38,7 +41,7 @@ func main() {
 	controller := controller.InitCleanupController(
 		utils.MustDuration(utils.GetIntEnv("CLEANUP_CONTROLLER_MAX_AGE", 10))*time.Minute,
 		utils.MustDuration(utils.GetIntEnv("CLEANUP_CONTROLLER_INTERVAL", 5))*time.Second,
-	) // maxAge = 36 часов, interval = 1 час
+	)
 	go controller.Run()
 
 	e.Logger.Fatal(e.Start(":8080"))

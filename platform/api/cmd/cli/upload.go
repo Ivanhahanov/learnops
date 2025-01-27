@@ -46,51 +46,20 @@ func (c *Course) Upload(cmd *cli.Command) {
 }
 
 func (c *Course) EnrichFiles() {
-	for _, module := range c.Course.Modules {
+	for i, module := range c.Course.Modules {
+		if module.Order == 0 {
+			module.Order = i
+		}
 		for _, task := range module.Tasks {
 			task.Readme = c.getTaskText(module.Name, task.Name)
 			task.Validate = c.getTaskValidationScript(module.Name, task.Name)
-			// task.UniqueIndex = strings.Join(
-			// 	[]string{
-			// 		c.Course.Name,
-			// 		module.Name,
-			// 		task.Name,
-			// 	},
-			// 	"-",
-			// )
-			//fmt.Println(task.Name, task.Readme, task.Validate)
 		}
 		for _, lecture := range module.Lectures {
 			lecture.Content = c.getLectureText(module.Name, lecture.Name)
-			// lecture.UniqueIndex = strings.Join(
-			// 	[]string{
-			// 		c.Course.Name,
-			// 		module.Name,
-			// 		lecture.Name,
-			// 	},
-			// 	"-",
-			// )
-			//fmt.Println(lecture.Name, lecture.Content)
 		}
 		for _, quiz := range module.Quizzes {
 			quiz.Questions = c.readQuiz(module.Name, quiz.Name)
-			// quiz.UniqueIndex = strings.Join(
-			// 	[]string{
-			// 		c.Course.Name,
-			// 		module.Name,
-			// 		quiz.Name,
-			// 	},
-			// 	"-",
-			// )
-			//fmt.Println(quiz.Name, quiz.Questions)
 		}
-		// module.UniqueIndex = strings.Join(
-		// 	[]string{
-		// 		c.Course.Name,
-		// 		module.Name,
-		// 	},
-		// 	"-",
-		// )
 	}
 	fmt.Println(c.Course)
 }

@@ -75,11 +75,8 @@ const ModulesPage = () => {
 
 
     const calculateProgress = (module) => {
-        const total = module.lectures.length + module.tasks.length + module.quizzes.length;
-        const completed =
-            module.lectures.filter((l) => l.completed).length +
-            module.tasks.filter((task) => task.completed).length +
-            module.quizzes.filter((q) => q.completed).length;
+        const total = module.data.length;
+        const completed = module.data.filter((row) => row.completed).length
         return Math.round((completed / total) * 100);
     };
 
@@ -150,12 +147,12 @@ const ModulesPage = () => {
                     {filteredModules.length > 0 ? (
                         filteredModules.map((module) => {
                             const progress = calculateProgress(module);
-                            const completedTasks = module.tasks.filter((t) => t.completed).length;
-                            const completedLectures = module.lectures.filter((l) => l.completed).length;
-                            const completedQuizzes = module.quizzes.filter((q) => q.completed).length;
-                            const totalTasks = module.tasks.length;
-                            const totalLectures = module.lectures.length;
-                            const totalQuizzes = module.quizzes.length;
+                            const completedTasks = module.data.filter((row) => row.type === "task" && row.completed).length;
+                            const completedLectures = module.data.filter((row) => row.type === "lecture" && row.completed).length;
+                            const completedQuizzes = module.data.filter((row) => row.type === "quiz" && row.completed).length;
+                            const totalTasks = module.data.filter((row) => row.type === "task").length;
+                            const totalLectures = module.data.filter((row) => row.type === "lecture").length;
+                            const totalQuizzes = module.data.filter((row) => row.type === "quiz").length;
 
                             return (
                                 <div
@@ -169,23 +166,22 @@ const ModulesPage = () => {
                                                 <div className="flex items-center gap-1">
                                                     <span className="text-xl">
                                                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-6">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25" />
+                                                        </svg>
+                                                    </span>
+                                                    <span>
+                                                        {completedLectures}/{totalLectures}
+                                                    </span>
+                                                </div>
+                                                <div className="flex items-center gap-1">
+                                                    <span className="text-xl">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-6">
                                                             <path strokeLinecap="round" strokeLinejoin="round" d="m6.75 7.5 3 2.25-3 2.25m4.5 0h3m-9 8.25h13.5A2.25 2.25 0 0 0 21 18V6a2.25 2.25 0 0 0-2.25-2.25H5.25A2.25 2.25 0 0 0 3 6v12a2.25 2.25 0 0 0 2.25 2.25Z" />
                                                         </svg>
 
                                                     </span>
                                                     <span>
                                                         {completedTasks}/{totalTasks}
-                                                    </span>
-                                                </div>
-                                                <div className="flex items-center gap-1">
-                                                    <span className="text-xl">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-6">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25" />
-                                                        </svg>
-
-                                                    </span>
-                                                    <span>
-                                                        {completedLectures}/{totalLectures}
                                                     </span>
                                                 </div>
                                                 <div className="flex items-center gap-1">
@@ -218,95 +214,72 @@ const ModulesPage = () => {
 
                                     {expandedModules[module.id] && (
                                         <div className="mt-4 space-y-2">
-                                            {module.lectures.map((lecture, lectureIndex) => (
+                                            {module.data.map((item, index) => (
                                                 <div
-                                                    key={lectureIndex}
-                                                    className="flex items-center p-4 rounded-md border border-base-300 shadow bg-base-100">
-                                                    <div
-                                                        className={`indicator ${lecture.completed ? "bg-blue-500" : "bg-gray-300"
-                                                            } w-3 h-3 rounded-full mr-4`}
-                                                    ></div>
-                                                    <div className="flex flex-grow items-center gap-1">
-                                                        <span className="text-xl">
-                                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-6">
-                                                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25" />
-                                                            </svg>
-                                                        </span>
-                                                        <span>
-                                                            {lecture.title}
-                                                        </span>
-                                                    </div>
-                                                    <button
-                                                        onClick={() => openLectureModal(lecture.id)}
-                                                        className="btn btn-sm btn-primary w-24">
-                                                        Открыть
-                                                    </button>
-
-                                                    <LectureModal
-                                                        lectureId={lecture.id}
-                                                        isOpen={lectureModalStates[lecture.id] || false}
-                                                        onClose={() => closeLectureModal(lecture.id)}
-                                                        setModules={setModules}
-                                                    />
-                                                </div>
-                                            ))}
-                                            {module.tasks.map((task, taskIndex) => (
-                                                <div
-                                                    key={taskIndex}
+                                                    key={index}
                                                     className="flex items-center p-4 rounded-md border border-base-300 shadow bg-base-100"
                                                 >
                                                     <div
-                                                        className={`indicator ${task.completed ? "bg-blue-500" : "bg-gray-300"
+                                                        className={`indicator ${item.completed ? "bg-blue-500" : "bg-gray-300"
                                                             } w-3 h-3 rounded-full mr-4`}
                                                     ></div>
-                                                    {/* <svg role="img" className="h-4 w-4" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" version="1.1" fill="none" stroke="#000000" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <rect height="10.5" width="12.5" y="2.75" x="1.75"></rect> <path d="m8.75 10.25h2.5m-6.5-4.5 2.5 2.25-2.5 2.25"></path> </g></svg> */}
                                                     <div className="flex flex-grow items-center gap-1">
-                                                        <span className="text-xl">
+                                                        {item.type === "task" && (
                                                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-6">
                                                                 <path strokeLinecap="round" strokeLinejoin="round" d="m6.75 7.5 3 2.25-3 2.25m4.5 0h3m-9 8.25h13.5A2.25 2.25 0 0 0 21 18V6a2.25 2.25 0 0 0-2.25-2.25H5.25A2.25 2.25 0 0 0 3 6v12a2.25 2.25 0 0 0 2.25 2.25Z" />
                                                             </svg>
-
-                                                        </span>
-                                                        <span>
-                                                            {task.title}
-                                                        </span>
-                                                    </div>
-                                                    <TaskLink name={task.name} id={task.id}>
-                                                        <button className="btn btn-sm btn-accent w-24">
-                                                            Перейти
-                                                        </button>
-                                                    </TaskLink>
-                                                </div>
-                                            ))}
-                                            {module.quizzes.map((quiz, taskIndex) => (
-                                                <div
-                                                    key={taskIndex}
-                                                    className="flex items-center p-4 rounded-md border border-base-300 shadow bg-base-100">
-                                                    <div
-                                                        className={`indicator ${quiz.completed ? "bg-blue-500" : "bg-gray-300"
-                                                            } w-3 h-3 rounded-full mr-4`}
-                                                    ></div>
-                                                    <div className="flex flex-grow items-center gap-1">
-                                                        <span className="text-xl">
+                                                        )}
+                                                        {item.type === "lecture" && (
+                                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-6">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25" />
+                                                            </svg>
+                                                        )}
+                                                        {item.type === "quiz" && (
                                                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-6">
                                                                 <path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
                                                             </svg>
-                                                        </span>
-                                                        <span>
-                                                            {quiz.title}
-                                                        </span>
+                                                        )}
+                                                        <span>{item.title}</span>
                                                     </div>
-                                                    <button
-                                                        onClick={() => openTestModal(quiz.id)}
-                                                        className="btn btn-sm btn-info w-24">
-                                                        Пройти
-                                                    </button>
-                                                    <QuizModal
-                                                        quizId={quiz.id}
-                                                        isOpen={testModalStates[quiz.id] || false}
-                                                        onClose={() => closeTestModal(quiz.id)}
-                                                        setModules={setModules}
-                                                    />
+                                                    {item.type === "lecture" && (
+                                                        <>
+                                                            <button
+                                                                onClick={() => openLectureModal(item.id)}
+                                                                className="btn btn-sm btn-primary w-24"
+                                                            >
+                                                                Открыть
+                                                            </button>
+                                                            <LectureModal
+                                                                lectureId={item.id}
+                                                                isOpen={lectureModalStates[item.id] || false}
+                                                                onClose={() => closeLectureModal(item.id)}
+                                                                setModules={setModules}
+                                                            />
+                                                        </>
+                                                    )}
+                                                    {item.type === "task" && (
+                                                        <TaskLink name={item.name} id={item.id}>
+                                                            <button className="btn btn-sm btn-accent w-24">
+                                                                Перейти
+                                                            </button>
+                                                        </TaskLink>
+                                                    )}
+                                                    {item.type === "quiz" && (
+                                                        <>
+                                                            <button
+                                                                onClick={() => openTestModal(item.id)}
+                                                                className="btn btn-sm btn-info w-24"
+                                                            >
+                                                                Пройти
+                                                            </button>
+                                                            <QuizModal
+                                                                quizId={item.id}
+                                                                isOpen={testModalStates[item.id] || false}
+                                                                onClose={() => closeTestModal(item.id)}
+                                                                setModules={setModules}
+                                                            />
+                                                        </>
+                                                    )}
                                                 </div>
                                             ))}
                                         </div>
@@ -335,16 +308,16 @@ const CourseProgressStat = ({ modules }) => {
             if (module.completed) acc.completedModules++;
 
             // Обновляем статистику по лекциям
-            acc.totalLectures += module.lectures.length;
-            acc.completedLectures += module.lectures.filter((lecture) => lecture.completed).length;
+            acc.totalLectures += module.data.filter((row) => row.type === "lecture").length;
+            acc.completedLectures += module.data.filter((row) => row.type === "lecture" && row.completed).length;
 
             // Обновляем статистику по заданиям
-            acc.totalTasks += module.tasks.length;
-            acc.completedTasks += module.tasks.filter((task) => task.completed).length;
+            acc.totalTasks += module.data.filter((row) => row.type === "task").length;
+            acc.completedTasks += module.data.filter((row) => row.type === "task" && row.completed).length;
 
             // Обновляем статистику по тестам
-            acc.totalTests += module.quizzes.length;
-            acc.completedTests += module.quizzes.filter((quiz) => quiz.completed).length;
+            acc.totalQuizzes += module.data.filter((row) => row.type === "quiz").length;
+            acc.completedQuizzes += module.data.filter((row) => row.type === "quiz" && row.completed).length;
 
             return acc;
         },
@@ -354,8 +327,8 @@ const CourseProgressStat = ({ modules }) => {
             completedLectures: 0,
             totalTasks: 0,
             completedTasks: 0,
-            totalTests: 0,
-            completedTests: 0,
+            totalQuizzes: 0,
+            completedQuizzes: 0,
         }
     );
     data.totalModules = modules.length;
@@ -395,10 +368,10 @@ const CourseProgressStat = ({ modules }) => {
                     </div> */}
                 <div className="stat-title">Тесты</div>
                 <div className="stat-value text-info">
-                    {data.completedTests}/{data.totalTests}
+                    {data.completedQuizzes}/{data.totalQuizzes}
                 </div>
                 <div className="stat-desc">
-                    {calculatePercentage(data.completedTests, data.totalTests)}% завершено
+                    {calculatePercentage(data.completedQuizzes, data.totalQuizzes)}% завершено
                 </div>
             </div>
         </div>

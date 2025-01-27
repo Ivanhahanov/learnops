@@ -24,17 +24,22 @@ modules:
     description: "Научимся работать с ветками, объединять изменения и сотрудничать в команде."
     lectures: 
       - title: "Ветки: зачем и как?"
+        order: 1
         name: branches
       - title: "Удаленные репозитории: push и pull"
+        order: 3
         name: remotes
     tasks:
       - title: Создание и слияние веток
         name: merge-branches
+        order: 2
       - title: Работа с удаленным репозиторием
         name: remote-repo
+        order: 4
     quizzes:
       - title: Как ты управляешь ветками?
         name: branches
+        order: 5
 
   - title: Безопасность и продвинутые фишки Git
     name: git-advanced
@@ -42,13 +47,18 @@ modules:
     lectures: 
       - title: "GPG: зачем и как подписывать коммиты?"
         name: gpg-sign
+        order: 1
       - title: "Работа с историей: rebase, cherry-pick"
         name: git-history
+        order: 3
     tasks:
       - title: Настройка GPG подписи
         name: gpg-setup
+        order: 2
       - title: Сложные операции с историей
         name: history-ops
+        order: 4
     quizzes:
       - title: Проверь свою GPG магию
         name: gpg
+        order: 5

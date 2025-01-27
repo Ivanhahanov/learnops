@@ -22,6 +22,7 @@ type Module struct {
 	Title       string     `gorm:"not null" json:"title,omitempty"`
 	Name        string     `gorm:"not null" json:"name,omitempty"`
 	Description string     `gorm:"type:text" json:"description,omitempty"`
+	Order       int        `gorm:"" json:"order,omitempty"`
 	CourseID    uuid.UUID  `gorm:"not null" json:"course_id,omitempty"`
 	Lectures    []*Lecture `gorm:"foreignKey:ModuleID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE" json:"lectures,omitempty"`
 	Tasks       []*Task    `gorm:"foreignKey:ModuleID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE" json:"tasks,omitempty"`
@@ -31,6 +32,7 @@ type Module struct {
 // Lecture represents a lecture within a module
 type Lecture struct {
 	ID       uuid.UUID `gorm:"type:uuid;default:uuid_generate_v4()" json:"id,omitempty"`
+	Order    int       `gorm:"" json:"order,omitempty"`
 	Title    string    `gorm:"not null" json:"title,omitempty"`
 	Name     string    `gorm:"not null" json:"name,omitempty"`
 	ModuleID uuid.UUID `gorm:"not null" json:"module_id,omitempty"`
@@ -40,6 +42,7 @@ type Lecture struct {
 // Task represents a task within a module
 type Task struct {
 	ID       uuid.UUID `gorm:"type:uuid;default:uuid_generate_v4()"`
+	Order    int       `gorm:"" json:"order,omitempty"`
 	Title    string    `gorm:"not null"`
 	Name     string    `gorm:"not null"`
 	ModuleID uuid.UUID `gorm:"not null"`
@@ -50,6 +53,7 @@ type Task struct {
 // Quiz represents a quiz within a module
 type Quiz struct {
 	ID        uuid.UUID   `gorm:"type:uuid;default:uuid_generate_v4()" json:"id,omitempty"`
+	Order     int         `gorm:"" json:"order,omitempty"`
 	Title     string      `gorm:"not null" json:"title,omitempty"`
 	Name      string      `gorm:"not null" json:"name,omitempty"`
 	ModuleID  uuid.UUID   `gorm:"not null" json:"module_id,omitempty"`
@@ -59,6 +63,7 @@ type Quiz struct {
 // Question represents a question within a quiz
 type Question struct {
 	ID      uuid.UUID `gorm:"type:uuid;default:uuid_generate_v4()" json:"id,omitempty"`
+	Order   int       `gorm:"" json:"order,omitempty"`
 	Type    string    `gorm:"not null" json:"type,omitempty"`
 	Text    string    `gorm:"type:text;not null" json:"text,omitempty"`
 	QuizID  uuid.UUID `gorm:"not null" json:"quiz_id,omitempty"`
