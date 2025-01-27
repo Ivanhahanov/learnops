@@ -56,3 +56,20 @@ jobs:
         tags: |
           explabs/platform-ui:latest
           explabs/platform-ui:${{ steps.semantic.outputs.new_release_version }}
+    
+    - name: Set up Helm
+      if: steps.semantic.outputs.new_release_published == 'true'
+      uses: azure/setup-helm@v3
+      with:
+        version: 'v3.8.0'    
+
+    - name: Package Helm Chart
+      if: steps.semantic.outputs.new_release_published == 'true'
+      run: |
+        helm package ./helm --version ${{ steps.semantic.outputs.new_release_version }} --app-version ${{ steps.semantic.outputs.new_release_version }}
+
+    - name: Push Helm Chart to Docker Hub
+      if: steps.semantic.outputs.new_release_published == 'true'
+      run: |
+        CHART_FILE=$(ls *.tgz)
+        helm push $CHART_FILE oci://registry-1.docker.io/explabs
