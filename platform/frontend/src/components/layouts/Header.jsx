@@ -78,16 +78,17 @@ const Header = () => {
                         <ul
                             tabIndex={0}
                             className="menu menu-sm dropdown-content bg-base-100 rounded-box z-[1] mt-3 w-52 p-2 shadow">
-                            <p className="p-1 pb-3 text-md">
+                            <div className="p-1 pb-3 text-md">
                                 <div className="avatar placeholder align-middle">
                                     <div className="w-8 bg-base-300 rounded-full">
                                         <span className="text-xl">{user.profile.preferred_username[0].toUpperCase()}</span>
                                     </div>
                                 </div>
                                 <b className="px-2">{user.profile.preferred_username}</b>
-                            </p>
+                            </div>
                             <li><a onClick={logout} className="text-md">
-                            <svg className="w-4 h-4 stroke-error" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="#000000"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <path d="M15 16.5V19C15 20.1046 14.1046 21 13 21H6C4.89543 21 4 20.1046 4 19V5C4 3.89543 4.89543 3 6 3H13C14.1046 3 15 3.89543 15 5V8.0625M11 12H21M21 12L18.5 9.5M21 12L18.5 14.5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path> </g></svg>                                Logout
+                            <svg className="w-4 h-4 stroke-error" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" > <path d="M14 8v-2a2 2 0 0 0 -2 -2h-7a2 2 0 0 0 -2 2v12a2 2 0 0 0 2 2h7a2 2 0 0 0 2 -2v-2" /> <path d="M9 12h12l-3 -3" /> <path d="M18 15l3 -3" /> </svg> 
+                            Sign out
                             </a></li>
                         </ul>
                     </div>

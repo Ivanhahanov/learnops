@@ -1,9 +1,7 @@
 ---
 linkTitle: Docs
-title: 'Introduction'
+title: '👋 Hi! Welcome to the LearnOps documentation!'
 ---
-
-👋 Hello! Welcome to the LearnOps documentation!
 
 <!--more-->
 
@@ -20,11 +18,3 @@ The platform includes:
 - ✅ **Automated Task Verification**: Automatically checks student submissions for correctness.
 - 🛠️ **CLI Tool**: A command-line interface to interact with the platform.
 - 🎨 **Frontend**: A user-friendly web interface for students and instructors.
-- 🔧 **API**: A backend API to manage courses, tasks, and environments.
-
-## Next
-{{< cards >}}
-  {{< card link="getting-started" title="Getting Started" icon="document-text" subtitle="Learn how to create website using Hextra" >}}
-
-  {{< card link="admin-guide" title="Platform Administration" icon="document-text" subtitle="Learn how to create website using Hextra" >}}
-{{< /cards >}}

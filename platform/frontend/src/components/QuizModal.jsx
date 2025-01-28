@@ -36,7 +36,6 @@ const QuizModal = ({ isOpen, onClose, quizId, setModules }) => {
       }
 
       const result = await response.json();
-      console.log("Ответ от API:", result);
 
       if (result.status === "failed") {
         setFeedback(result.message || "Тест пройден неправильно. Попробуйте ещё раз.");
@@ -50,8 +49,8 @@ const QuizModal = ({ isOpen, onClose, quizId, setModules }) => {
         setModules((prevModules) =>
           prevModules.map((module) => ({
             ...module,
-            quizzes: module.quizzes.map((quiz) =>
-              quiz.id === quizId ? { ...quiz, completed: true } : quiz
+            data: module.data.map((row) =>
+              row.id === quizId ? { ...row, completed: true } : row
             ),
           }))
         );
@@ -74,7 +73,6 @@ const QuizModal = ({ isOpen, onClose, quizId, setModules }) => {
       });
       const data = await response.json();
       setQuestions(data.questions);
-      console.log(data);
     } catch (error) {
       console.error("Ошибка при загрузке данных:", error);
     }
