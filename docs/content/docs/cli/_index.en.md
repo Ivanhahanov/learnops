@@ -5,4 +5,6 @@ prev: admin-guide
 next: arch
 ---
 
-## CLI
+## Install
+
+## Commands

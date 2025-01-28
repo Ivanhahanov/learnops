@@ -7,18 +7,18 @@ TEMP_SSL_DIR=".ssl"
 CLUSTER_NAME="kind"
 
 
-# echo "# do some clean up"
-# rm -rf ${TEMP_SSL_DIR}
+echo "# do some clean up"
+rm -rf ${TEMP_SSL_DIR}
 
-# echo "# create a folder to store certificates"
-# mkdir -p ${TEMP_SSL_DIR}
+echo "# create a folder to store certificates"
+mkdir -p ${TEMP_SSL_DIR}
 
-# echo "# generate an rsa key"
-# openssl genrsa -out .ssl/root-ca-key.pem 2048
+echo "# generate an rsa key"
+openssl genrsa -out .ssl/root-ca-key.pem 2048
 
-# echo "# generate root certificate"
-# openssl req -x509 -new -nodes -key .ssl/root-ca-key.pem \
-#   -days 3650 -sha256 -out .ssl/root-ca.pem -subj "/CN=kube-ca"
+echo "# generate root certificate"
+openssl req -x509 -new -nodes -key .ssl/root-ca-key.pem \
+  -days 3650 -sha256 -out .ssl/root-ca.pem -subj "/CN=kube-ca"
 
 if kind get clusters | grep -q "$CLUSTER_NAME"; then
   echo "Kind cluster $CLUSTER_NAME exists. Deleting..."
@@ -91,13 +91,7 @@ spec:
 EOF
 kubectl apply -f https://kind.sigs.k8s.io/examples/ingress/deploy-ingress-nginx.yaml
 
-# kubectl apply -f sa.yml
-# kubectl apply -f https://github.com/fluxcd/flux2/releases/latest/download/install.yaml
-# export KUBERNETES_SERVICE_ACCOUNT_TOKEN=$(kubectl create token terminal-account --duration 24h)
-
-# install capsule
 helm install capsule oci://ghcr.io/projectcapsule/charts/capsule --version 0.7.0  -n capsule-system --create-namespace
-# helm install capsule-proxy oci://ghcr.io/projectcapsule/charts/capsule-proxy -n capsule-system
 
 kubectl wait --namespace ingress-nginx --for=condition=ready pod --selector=app.kubernetes.io/component=controller --timeout=120s
 kubectl wait --namespace capsule-system --for=condition=ready pod --selector=app.kubernetes.io/instance=capsule --timeout=100s
