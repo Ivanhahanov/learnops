@@ -61,7 +61,7 @@ func (c *Controller) CheckIfPodExists(name string) error {
 
 	var podFound bool
 	for i := 0; i < maxRetries; i++ {
-		_, err := k8s.UserClient.CoreV1().Pods(c.Task).Get(context.TODO(), name, metav1.GetOptions{})
+		_, err := k8s.UserClient.CoreV1().Pods(c.Namespace).Get(context.TODO(), name, metav1.GetOptions{})
 		if err == nil {
 			podFound = true
 			break
@@ -72,7 +72,7 @@ func (c *Controller) CheckIfPodExists(name string) error {
 	}
 
 	if !podFound {
-		log.Println("Pod не найден после нескольких попыток")
+		log.Println("Can't find pod")
 		return fmt.Errorf("pod not found")
 	}
 	return nil

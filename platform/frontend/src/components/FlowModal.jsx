@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
     ReactFlow,
     ReactFlowProvider,
@@ -11,7 +11,6 @@ import '@xyflow/react/dist/style.css';
 import ServiceCard from '../components/ServiceCard';
 import { useAuth } from '../context/OAuthContext';
 import { useParams } from 'react-router-dom';
-import * as d3 from "d3-force";
 const CustomNode = ({ data }) => {
     return (
         <ServiceCard service={data} />
@@ -20,28 +19,6 @@ const CustomNode = ({ data }) => {
 
 
 const nodeTypes = { custom: CustomNode };
-
-const initialNodes = [
-    { id: "2", type: "custom", data: { name: "Kubernetes", description: "Типо прод", active: true, } }, {
-        id: "3", type: "custom", data: {
-            name: "Gitlab",
-            description: "Здесь лежат исходники",
-            ingress: [
-                { name: "Gitlab", url: "http://ingress" }
-            ],
-            auth: {
-                username: "admin",
-                password: "admin",
-            },
-            active: true,
-        }
-    },
-    { id: "1", type: "custom", data: { name: "Terminal", description: "Вы здесь", active: true } },
-
-    { id: "4", type: "custom", data: { name: "Registry", description: "Здесь лежат образы", active: true, } },
-
-
-];
 
 const FlowChart = () => {
     return (
@@ -57,7 +34,6 @@ const InnerFlow = () => {
     const reactFlowWrapper = useRef(null);
     const { fitView } = useReactFlow();
     const [nodes, setNodes, onNodesChange] = useNodesState([]);
-    const [rawNodes, setRawNodes] = useNodesState([]);
 
     useEffect(() => {
         async function fetchAndArrangeNodes() {

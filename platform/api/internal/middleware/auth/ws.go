@@ -6,6 +6,6 @@ import (
 
 func ParamsTokenToContextMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 	return tokenToContextMiddleware(func(c echo.Context) string {
-		return c.Param("token")
+		return c.QueryParam("token")
 	})(next)
 }

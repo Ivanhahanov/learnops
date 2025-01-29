@@ -122,8 +122,7 @@ func (capsule *Capsule) runTerminal() error {
 func (capsule *Capsule) createService() error {
 	service := &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "terminal",
-			Namespace: capsule.Namespace,
+			Name: "terminal",
 		},
 		Spec: corev1.ServiceSpec{
 			Selector: map[string]string{
@@ -137,7 +136,7 @@ func (capsule *Capsule) createService() error {
 			},
 		},
 	}
-	if _, err := capsule.ClientSet.CoreV1().Services(capsule.Tenant).Create(context.TODO(), service, metav1.CreateOptions{}); err != nil {
+	if _, err := capsule.ClientSet.CoreV1().Services(capsule.Namespace).Create(context.TODO(), service, metav1.CreateOptions{}); err != nil {
 		return err
 	}
 	return nil
@@ -159,7 +158,6 @@ func (capsule *Capsule) createIngress() error {
 	ingress := &networkingv1.Ingress{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:        "terminal",
-			Namespace:   capsule.Namespace,
 			Annotations: annotations,
 		},
 		Spec: networkingv1.IngressSpec{
@@ -196,7 +194,7 @@ func (capsule *Capsule) createIngress() error {
 		},
 	}
 
-	if _, err := capsule.ClientSet.NetworkingV1().Ingresses(capsule.Tenant).Create(context.TODO(), ingress, metav1.CreateOptions{}); err != nil {
+	if _, err := capsule.ClientSet.NetworkingV1().Ingresses(capsule.Namespace).Create(context.TODO(), ingress, metav1.CreateOptions{}); err != nil {
 		return err
 	}
 	return nil
