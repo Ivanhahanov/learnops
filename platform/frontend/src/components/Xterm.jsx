@@ -3,20 +3,8 @@ import { Terminal } from '@xterm/xterm';
 import { AttachAddon } from '@xterm/addon-attach'
 import { FitAddon } from '@xterm/addon-fit'
 import { WebglAddon } from '@xterm/addon-webgl'
-// import '../index.css'
 import '@xterm/xterm/css/xterm.css'
 
-
-// const useWebSocketWithTimeout = (uri, timeout) => {
-
-
-
-
-
-
-
-//   return { webSocket, isConnected, error };
-// };
 
 const TerminalComponent = ({ uri }) => {
   const [webSocket, setWebSocket] = useState(null); // Хранит объект WebSocket

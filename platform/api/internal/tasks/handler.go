@@ -3,6 +3,7 @@ package tasks
 import (
 	"net/http"
 	"platform/pkg/tasks"
+	"platform/pkg/tasks/controller"
 	"platform/pkg/tasks/provider"
 
 	"github.com/google/uuid"
@@ -52,4 +53,18 @@ func VerifyTask(c echo.Context) error {
 		c.Get("token").(string),
 	)
 	return c.JSON(http.StatusOK, result)
+}
+
+func GetServiceMap(c echo.Context) error {
+	serviceMap, err := controller.NewController(
+		c.Get("name").(string),
+		c.Get("token").(string),
+		c.Param("name"),
+		"",
+		nil,
+	).GetInfo()
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+	return c.JSON(http.StatusOK, serviceMap)
 }

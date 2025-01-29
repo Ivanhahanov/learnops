@@ -23,10 +23,23 @@ type Controller struct {
 }
 
 type StatusMessage struct {
-	Name      string `json:"name,omitempty"`
-	Uri       string `json:"uri,omitempty"`
-	Status    string `json:"status,omitempty"`
-	ExpiredAt string `json:"expired_at,omitempty"`
+	Name        string    `json:"name,omitempty"`
+	Uri         string    `json:"uri,omitempty"`
+	Status      string    `json:"status,omitempty"`
+	Description string    `json:"description,omitempty"`
+	Ingress     []Ingress `json:"ingress,omitempty"`
+	Auth        []Auth    `json:"auth,omitempty"`
+	ExpiredAt   string    `json:"expired_at,omitempty"`
+}
+
+type Ingress struct {
+	Name string `json:"name,omitempty"`
+	Url  string `json:"url,omitempty"`
+}
+
+type Auth struct {
+	Name  string `json:"name,omitempty"`
+	Value string `json:"value,omitempty"`
 }
 
 func NewController(user, token, task, pod string, wsConn *websocket.Conn) *Controller {
@@ -65,6 +78,28 @@ func (c *Controller) CheckIfPodExists() error {
 		return fmt.Errorf("pod not found")
 	}
 	return nil
+}
+
+func (c *Controller) getIngressInfo() []Ingress { return []Ingress{} }
+func (c *Controller) getAuthInfo() []Auth       { return []Auth{} }
+
+func (c *Controller) GetInfo() ([]StatusMessage, error) {
+	k8s := client.Init(c.Token)
+	pods, err := k8s.UserClient.CoreV1().Pods(c.Task).List(context.TODO(), metav1.ListOptions{})
+	if err != nil {
+		return nil, fmt.Errorf("can't list pods: ", err)
+	}
+	info := []StatusMessage{}
+	for _, pod := range pods.Items {
+		info = append(info, StatusMessage{
+			Name:        pod.Name,
+			Status:      string(pod.Status.Phase),
+			Description: pod.Annotations["learnops/description"],
+			Ingress:     c.getIngressInfo(),
+			Auth:        c.getAuthInfo(),
+		})
+	}
+	return info, nil
 }
 
 func (c *Controller) Watch() error {

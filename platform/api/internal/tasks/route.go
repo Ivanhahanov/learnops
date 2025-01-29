@@ -17,4 +17,5 @@ func RegisterRoutes(e *echo.Echo) {
 	task.GET("/verify/:name", VerifyTask)
 	// INFO: maybe can ignore middleware
 	e.GET("/api/status/:name", handleWebSocket)
+	task.GET("/map/:name", GetServiceMap)
 }

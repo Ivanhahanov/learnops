@@ -35,7 +35,6 @@ const ModulesPage = () => {
     };
     // hack: if use navigate(-1) reload modules info
     useEffect(() => {
-        console.log('update')
         fetchModules();
     }, [location.state]);
 

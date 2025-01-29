@@ -90,6 +90,9 @@ func (capsule *Capsule) runTerminal() error {
 	}
 	pod := &corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
+			Annotations: map[string]string{
+				"learnops/description": "You're here",
+			},
 			Name:      "terminal",
 			Namespace: capsule.Tenant,
 			Labels: map[string]string{
