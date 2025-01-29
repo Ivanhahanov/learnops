@@ -50,7 +50,7 @@ const Workspace = () => {
             launchSandbox();
             // wait for task
             let schema = (location.protocol == "https:" ? "wss:" : "ws:")
-            let uri = `${schema}//${location.host}/api/status/${name}?token=${user.id_token}&name=${user.profile.preferred_username}`
+            let uri = `${schema}//${location.host}/api/status/${name}?token=${user.id_token}`
             const socket = new WebSocket(uri);
 
             socket.onmessage = (e) => {
