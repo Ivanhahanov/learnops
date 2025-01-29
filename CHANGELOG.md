@@ -1,3 +1,11 @@
+## [0.3.1](https://github.com/Ivanhahanov/learnops/compare/v0.3.0...v0.3.1) (2025-01-28)
+
+
+### Bug Fixes
+
+* change to jsx svg ([9611da7](https://github.com/Ivanhahanov/learnops/commit/9611da75fe104ead0a466ec90a5d902e0f65ef5d))
+* positive state ([fc9d2f9](https://github.com/Ivanhahanov/learnops/commit/fc9d2f982313b3af5cc7b13efcd74b62dd64bb27))
+
 # [0.3.0](https://github.com/Ivanhahanov/learnops/compare/v0.2.0...v0.3.0) (2025-01-27)
 
 
