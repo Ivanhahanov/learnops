@@ -15,10 +15,10 @@ import (
 
 type Controller struct {
 	User      string
+	UserID    string
 	Token     string
 	Task      string
-	Pod       string
-	wsConn    *websocket.Conn
+	Namespace string
 	ExpiredAt string
 }
 
@@ -42,24 +42,26 @@ type Auth struct {
 	Value string `json:"value,omitempty"`
 }
 
-func NewController(user, token, task, pod string, wsConn *websocket.Conn) *Controller {
+var maxAge = utils.MustDuration(utils.GetIntEnv("CLEANUP_CONTROLLER_MAX_AGE", 10)) * time.Minute
+
+func NewController(user, userId, token, task string) *Controller {
 	return &Controller{
 		User:      user,
+		UserID:    userId,
 		Token:     token,
 		Task:      task,
-		Pod:       pod,
-		ExpiredAt: fmt.Sprintf("%d", time.Now().Add(time.Minute*10).Unix()),
-		wsConn:    wsConn,
+		Namespace: fmt.Sprintf("%s-%s", task, userId),
+		ExpiredAt: fmt.Sprintf("%d", time.Now().Add(maxAge).Unix()),
 	}
 }
-func (c *Controller) CheckIfPodExists() error {
+func (c *Controller) CheckIfPodExists(name string) error {
 	k8s := client.Init(c.Token)
 	const maxRetries = 10                 // Максимальное количество попыток проверки существования Pod
 	const retryInterval = 1 * time.Second // Интервал между попытками
 
 	var podFound bool
 	for i := 0; i < maxRetries; i++ {
-		_, err := k8s.UserClient.CoreV1().Pods(c.Task).Get(context.TODO(), c.Pod, metav1.GetOptions{})
+		_, err := k8s.UserClient.CoreV1().Pods(c.Task).Get(context.TODO(), name, metav1.GetOptions{})
 		if err == nil {
 			podFound = true
 			break
@@ -71,10 +73,6 @@ func (c *Controller) CheckIfPodExists() error {
 
 	if !podFound {
 		log.Println("Pod не найден после нескольких попыток")
-		c.wsConn.WriteJSON(StatusMessage{
-			Name:   c.Task,
-			Status: "not-found",
-		})
 		return fmt.Errorf("pod not found")
 	}
 	return nil
@@ -85,7 +83,7 @@ func (c *Controller) getAuthInfo() []Auth       { return []Auth{} }
 
 func (c *Controller) GetInfo() ([]StatusMessage, error) {
 	k8s := client.Init(c.Token)
-	pods, err := k8s.UserClient.CoreV1().Pods(c.Task).List(context.TODO(), metav1.ListOptions{})
+	pods, err := k8s.UserClient.CoreV1().Pods(c.Namespace).List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		return nil, fmt.Errorf("can't list pods: ", err)
 	}
@@ -102,26 +100,30 @@ func (c *Controller) GetInfo() ([]StatusMessage, error) {
 	return info, nil
 }
 
-func (c *Controller) Watch() error {
-	err := c.CheckIfPodExists()
+func (c *Controller) Watch(name string, wsConn *websocket.Conn) error {
+	err := c.CheckIfPodExists(name)
 	if err != nil {
+		wsConn.WriteJSON(StatusMessage{
+			Name:   c.Task,
+			Status: "not-found",
+		})
 		return err
 	}
 	k8s := client.Init(c.Token)
-	uri := fmt.Sprintf("wss://%s/xterm.js", utils.GenHostName(c.Pod, c.Task, c.User))
+	uri := fmt.Sprintf("wss://%s/xterm.js", utils.GenHostName(name, c.Task, c.User))
 	statusMsg := StatusMessage{
 		Name:      c.Task,
 		Uri:       uri,
 		ExpiredAt: c.ExpiredAt,
 	}
 
-	watcher, err := k8s.UserClient.CoreV1().Pods(c.Task).Watch(context.TODO(), metav1.ListOptions{
-		FieldSelector: fmt.Sprintf("metadata.name=%s", c.Pod),
+	watcher, err := k8s.UserClient.CoreV1().Pods(c.Namespace).Watch(context.TODO(), metav1.ListOptions{
+		FieldSelector: fmt.Sprintf("metadata.name=%s", name),
 	})
 	if err != nil {
 		log.Println("Ошибка создания watcher:", err)
 		statusMsg.Status = "error"
-		c.wsConn.WriteJSON(statusMsg)
+		wsConn.WriteJSON(statusMsg)
 		return err
 	}
 	defer watcher.Stop()
@@ -137,22 +139,18 @@ func (c *Controller) Watch() error {
 		switch pod.Status.Phase {
 		case v1.PodPending:
 			statusMsg.Status = "pending"
-			c.wsConn.WriteJSON(statusMsg)
+			wsConn.WriteJSON(statusMsg)
 		case v1.PodRunning:
 			statusMsg.Status = "ready"
-			c.wsConn.WriteJSON(statusMsg)
+			wsConn.WriteJSON(statusMsg)
 			return nil
-		// case v1.PodSucceeded:
-		// 	statusMsg.Status = "ready"
-		// 	c.wsConn.WriteJSON(statusMsg)
-		// 	return // Завершаем наблюдение
 		case v1.PodFailed:
 			statusMsg.Status = "failed"
-			c.wsConn.WriteJSON(statusMsg)
+			wsConn.WriteJSON(statusMsg)
 			return nil
 		case v1.PodUnknown:
 			statusMsg.Status = "failed"
-			c.wsConn.WriteJSON(statusMsg)
+			wsConn.WriteJSON(statusMsg)
 		}
 	}
 	return nil

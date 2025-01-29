@@ -21,7 +21,12 @@ func Readme(c echo.Context) error {
 func RunTask(c echo.Context) error {
 	taskName := c.Param("name")
 
-	err := provider.InitCapsule(taskName, c.Get("name").(string), c.Get("token").(string)).Deploy()
+	err := provider.InitCapsule(
+		taskName,
+		c.Get("name").(string),
+		c.Get("user_id").(uuid.UUID).String(),
+		c.Get("token").(string),
+	).Deploy()
 	if err != nil {
 		return err
 	}
@@ -36,7 +41,9 @@ func StopTask(c echo.Context) error {
 	taskName := c.Param("name")
 	err := provider.InitCapsule(taskName,
 		c.Get("name").(string),
-		c.Get("token").(string)).Destroy()
+		c.Get("user_id").(uuid.UUID).String(),
+		c.Get("token").(string),
+	).Destroy()
 
 	if err != nil {
 		return c.String(http.StatusInternalServerError, err.Error())
@@ -58,10 +65,9 @@ func VerifyTask(c echo.Context) error {
 func GetServiceMap(c echo.Context) error {
 	serviceMap, err := controller.NewController(
 		c.Get("name").(string),
+		c.Get("user_id").(uuid.UUID).String(),
 		c.Get("token").(string),
 		c.Param("name"),
-		"",
-		nil,
 	).GetInfo()
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())

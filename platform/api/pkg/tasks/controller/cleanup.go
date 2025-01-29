@@ -30,7 +30,7 @@ func (c *CleanupController) Run() {
 	}
 }
 func (c *CleanupController) cleanupTenants() {
-	tenants, err := provider.InitCapsule("", "", "").List()
+	tenants, err := provider.InitCapsule("", "", "", "").TenantList()
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -50,5 +50,5 @@ func (c *CleanupController) cleanupTenants() {
 }
 
 func (c *CleanupController) deleteTenant(tenantName string) error {
-	return provider.InitCapsule(tenantName, "", "").Destroy()
+	return provider.InitCapsule(tenantName, "", "", "").Destroy()
 }

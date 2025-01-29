@@ -13,8 +13,8 @@ type ConnectionInfo struct {
 	ExpiredAt string `json:"expired_at,omitempty"`
 }
 
-func RunTask(name, user, token string) (*ConnectionInfo, error) {
-	if err := provider.InitCapsule(name, user, token).Deploy(); err != nil {
+func RunTask(name, user, userId, token string) (*ConnectionInfo, error) {
+	if err := provider.InitCapsule(name, user, userId, token).Deploy(); err != nil {
 		return nil, err
 	}
 	return &ConnectionInfo{

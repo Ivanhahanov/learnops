@@ -23,16 +23,20 @@ import (
 type Capsule struct {
 	Tenant    string
 	User      string
+	UserID    string
+	Namespace string
 	Client    client.Client
 	ClientSet *kubernetes.Clientset
 }
 
-func InitCapsule(tenant, user, token string) *Capsule {
+func InitCapsule(tenant, user, userId, token string) *Capsule {
 	var err error
 	// init capsule struct
 	capsule := &Capsule{
-		Tenant: tenant,
-		User:   user,
+		Tenant:    tenant,
+		User:      user,
+		UserID:    userId,
+		Namespace: fmt.Sprintf("%s-%s", tenant, userId),
 	}
 
 	scheme := runtime.NewScheme()
@@ -73,7 +77,7 @@ func (capsule *Capsule) createTenant() error {
 func (capsule *Capsule) createNamespace() error {
 	namespace := &corev1.Namespace{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: capsule.Tenant,
+			Name: capsule.Namespace,
 		},
 	}
 	if _, err := capsule.ClientSet.CoreV1().Namespaces().Create(context.TODO(), namespace, metav1.CreateOptions{}); err != nil {
@@ -93,8 +97,7 @@ func (capsule *Capsule) runTerminal() error {
 			Annotations: map[string]string{
 				"learnops/description": "You're here",
 			},
-			Name:      "terminal",
-			Namespace: capsule.Tenant,
+			Name: "terminal",
 			Labels: map[string]string{
 				"app": "terminal",
 			},
@@ -110,7 +113,7 @@ func (capsule *Capsule) runTerminal() error {
 		},
 	}
 
-	if _, err := capsule.ClientSet.CoreV1().Pods(capsule.Tenant).Create(context.TODO(), pod, metav1.CreateOptions{}); err != nil {
+	if _, err := capsule.ClientSet.CoreV1().Pods(capsule.Namespace).Create(context.TODO(), pod, metav1.CreateOptions{}); err != nil {
 		return err
 	}
 	return nil
@@ -120,7 +123,7 @@ func (capsule *Capsule) createService() error {
 	service := &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "terminal",
-			Namespace: capsule.Tenant,
+			Namespace: capsule.Namespace,
 		},
 		Spec: corev1.ServiceSpec{
 			Selector: map[string]string{
@@ -156,7 +159,7 @@ func (capsule *Capsule) createIngress() error {
 	ingress := &networkingv1.Ingress{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:        "terminal",
-			Namespace:   capsule.Tenant,
+			Namespace:   capsule.Namespace,
 			Annotations: annotations,
 		},
 		Spec: networkingv1.IngressSpec{
@@ -210,7 +213,7 @@ func (capsule *Capsule) Deploy() error {
 	if err := capsule.createNamespace(); err != nil {
 		return fmt.Errorf("create namespace err: %v", err)
 	}
-	err = capsule.WaitForNamespaceInTenant(capsule.Tenant, 5*time.Second)
+	err = capsule.WaitForNamespaceInTenant(capsule.Namespace, 5*time.Second)
 	if err != nil {
 		return fmt.Errorf("wait for namespace in tenant err: %v", err)
 	}
@@ -245,7 +248,7 @@ func (capsule *Capsule) Destroy() error {
 	return nil
 }
 
-func (capsule *Capsule) List() (*capsulev1beta2.TenantList, error) {
+func (capsule *Capsule) TenantList() (*capsulev1beta2.TenantList, error) {
 	tenants := &capsulev1beta2.TenantList{}
 	err := capsule.Client.List(context.Background(), tenants)
 	if err != nil {

@@ -11,8 +11,7 @@ import '@xyflow/react/dist/style.css';
 import ServiceCard from '../components/ServiceCard';
 import { useAuth } from '../context/OAuthContext';
 import { useParams } from 'react-router-dom';
-
-
+import * as d3 from "d3-force";
 const CustomNode = ({ data }) => {
     return (
         <ServiceCard service={data} />
@@ -75,25 +74,30 @@ const InnerFlow = () => {
                     data: data
 
                 }));
-                setRawNodes(enrichedNodes)
-
 
                 if (reactFlowWrapper.current) {
                     const { clientWidth, clientHeight } = reactFlowWrapper.current;
-
                     const centerX = clientWidth / 2;
                     const centerY = clientHeight / 2;
-                    const radius = 200;
+                    const radius = 250; // Радиус окружности
 
                     const newNodes = enrichedNodes.map((node, index) => {
-                        const angle = (index / enrichedNodes.length) * 2 * Math.PI;
-                        return {
-                            ...node,
-                            position: {
-                                x: centerX + radius * Math.cos(angle) - 50,
-                                y: centerY + radius * Math.sin(angle) - 25,
-                            },
-                        };
+                        if (index === 0) {
+                            return {
+                                ...node,
+                                position: { x: centerX, y: centerY }, // Центр для первого узла
+                            };
+                        } else {
+                            // Размещаем остальные по кругу
+                            const angle = ((index - 1) / (enrichedNodes.length - 1)) * 2 * Math.PI;
+                            return {
+                                ...node,
+                                position: {
+                                    x: centerX + radius * Math.cos(angle),
+                                    y: centerY + radius * Math.sin(angle),
+                                },
+                            };
+                        }
                     });
 
                     setNodes(newNodes);

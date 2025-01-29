@@ -86,9 +86,9 @@ const Workspace = () => {
 
     const [active, setActive] = useState(tabs[0]);
 
-    if (sandboxStatus === "ready") {
+    if (sandboxStatus !== "ready") {
         return (
-            <div className="flex flex-col items-center justify-center h-full skeleton">
+            <div className="flex flex-col items-center justify-center h-[calc(100vh-5em)] skeleton">
                 <span className="loading loading-spinner loading-lg"></span>
                 <p>Loading the workspace</p>
                 <p>{sandboxStatus}</p>

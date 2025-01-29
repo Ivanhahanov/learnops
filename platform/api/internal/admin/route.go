@@ -11,7 +11,7 @@ func RegisterRoutes(e *echo.Echo) {
 	db := database.DbManager()
 	admin := e.Group("/api/admin")
 	admin.Use(
-		auth.KeycloakTokenToContextMiddleware,
+		auth.HeaderTokenToContextMiddleware,
 		AdminCheckMiddleware,
 	)
 	admin.POST("/courses/assign", AssignCourseHandler(db))

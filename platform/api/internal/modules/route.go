@@ -13,7 +13,7 @@ import (
 func RegisterRoutes(e *echo.Echo) {
 	api := e.Group("/api")
 	api.Use(
-		auth.KeycloakTokenToContextMiddleware,
+		auth.HeaderTokenToContextMiddleware,
 	)
 	api.POST("/quiz/:id/submit", CheckQuiz)
 	api.GET("/lecture/:id", func(c echo.Context) error {

@@ -21,6 +21,7 @@
     "@xyflow/react": "^12.4.2",
     "canvas-confetti": "^1.9.3",
     "chart.js": "^4.4.7",
+    "d3-force": "^3.0.0",
     "dotenv": "^16.4.7",
     "font-awesome": "^4.7.0",
     "highlight.js": "^11.10.0",
