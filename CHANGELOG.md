@@ -1,3 +1,17 @@
+# [0.4.0](https://github.com/Ivanhahanov/learnops/compare/v0.3.1...v0.4.0) (2025-02-01)
+
+
+### Bug Fixes
+
+* change uri ([19f9915](https://github.com/Ivanhahanov/learnops/commit/19f9915c32a8c3bc9a2adbb5eeb32dfbffabeade))
+* uniq namespaces ([bb6657a](https://github.com/Ivanhahanov/learnops/commit/bb6657a9db4cc7ed4df2cbe7c1ee75cb4ca24240))
+
+
+### Features
+
+* add kro for deploy manifests ([0aabd9b](https://github.com/Ivanhahanov/learnops/commit/0aabd9be8d056c33589029aad4e74563ef2e4080))
+* add service map ([7a07231](https://github.com/Ivanhahanov/learnops/commit/7a0723193719efacb8c73f8cdf83bc30c4446b11))
+
 ## [0.3.1](https://github.com/Ivanhahanov/learnops/compare/v0.3.0...v0.3.1) (2025-01-28)
 
 
