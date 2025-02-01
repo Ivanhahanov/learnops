@@ -10,7 +10,8 @@ weight: 4
 Задания представляют собой директорию, содержащую:
 
 1. `README.md` — описание задания.
-2. `validation.sh` — скрипт для автоматической проверки решения.
+2. `manifest.yml` — k8s манифесты для развёртывания.
+3. `validation.sh` — скрипт для автоматической проверки решения.
 
 ### Пример структуры задания
 
@@ -18,6 +19,7 @@ weight: 4
 tasks/
 └── init-repo/
     ├── README.md
+    ├── manifest.yml
     └── validation.sh
 ```
 
@@ -38,6 +40,30 @@ tasks/
 - Файл `README.md` добавлен и зафиксирован в истории.
 - Комментарий коммита: "Initial commit".
 ```
+### Пример `manifest.yml`
+```yaml
+apiVersion: kro.run/v1alpha1
+kind: Terminal
+metadata:
+  name: users-terminal
+spec:
+  name: terminal
+
+---
+apiVersion: kro.run/v1alpha1
+kind: Gitea
+metadata:
+  name: users-gitea
+spec:
+  name: gitea
+  ingress:
+    enabled: true
+```
+Для описания заданий рекомендуется использовать [kro](https://kro.run/).
+{{< cards >}}
+  {{< card link="../../admin-guide/kro" title="Шаблоны заданий" icon="cog" >}}
+{{< /cards >}}
+
 
 ### Пример `validation.sh`
 

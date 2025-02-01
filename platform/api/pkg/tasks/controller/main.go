@@ -54,7 +54,7 @@ func NewController(user *database.User, token string) *Controller {
 func (c *Controller) CheckIfDeploymentExists(name string) error {
 	k8s := client.Init(c.Token)
 	const maxRetries = 10                 // Максимальное количество попыток проверки существования Pod
-	const retryInterval = 1 * time.Second // Интервал между попытками
+	const retryInterval = 2 * time.Second // Интервал между попытками
 
 	var deploymentFound bool
 	for i := 0; i < maxRetries; i++ {

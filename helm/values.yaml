@@ -13,7 +13,7 @@ global:
 
 api:
   database:
-    uri: "postgresql://root@cockroachdb:26257?sslmode=disable"
+    uri: "postgresql://root@crdb-cockroachdb:26257?sslmode=disable"
 
   replicaCount: 1
 

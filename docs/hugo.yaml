@@ -1,16 +1,17 @@
-title: LearOps
+title: LearnOps
 module:
   imports:
     - path: github.com/imfing/hextra
 
-defaultContentLanguage: en
+defaultContentLanguage: ru
 languages:
-  en:
-    languageName: English
-    weight: 1
   ru:
     languageName: Русский
+    weight: 1
+  en:
+    languageName: English
     weight: 2
+  
 
 menu:
   main:
@@ -56,7 +57,10 @@ params:
     displayToggle: true
 
   footer:
-    enable: false
+    enable: true
+    displayCopyright: false
+    displayPoweredBy: false
+    width: normal
 
   # Search
   # flexsearch is enabled by default
