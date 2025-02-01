@@ -1,0 +1,6 @@
+apiVersion: kro.run/v1alpha1
+kind: Terminal
+metadata:
+  name: users-terminal
+spec:
+  name: terminal

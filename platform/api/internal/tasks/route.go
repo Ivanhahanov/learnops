@@ -9,12 +9,13 @@ import (
 func RegisterRoutes(e *echo.Echo) {
 	task := e.Group("/api/task")
 	task.Use(
-		auth.KeycloakTokenToContextMiddleware,
+		auth.HeaderTokenToContextMiddleware,
 	)
 	task.GET("/readme/:name", Readme)
 	task.GET("/run/:name", RunTask)
-	task.GET("/stop/:name", StopTask)
 	task.GET("/verify/:name", VerifyTask)
+	task.GET("/stop", StopTask)
 	// INFO: maybe can ignore middleware
-	e.GET("/api/status/:name", handleWebSocket)
+	e.GET("/api/status/:name", handleWebSocket, auth.ParamsTokenToContextMiddleware)
+	task.GET("/map/:name", GetServiceMap)
 }

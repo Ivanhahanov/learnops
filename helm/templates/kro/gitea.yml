@@ -1,0 +1,105 @@
+apiVersion: kro.run/v1alpha1
+kind: ResourceGraphDefinition
+metadata:
+  name: gitea
+spec:
+  # kro uses this simple schema to create your CRD schema and apply it
+  # The schema defines what users can provide when they instantiate the RGD (create an instance).
+  schema:
+    apiVersion: v1alpha1
+    kind: Gitea
+    spec:
+      # Spec fields that users can provide.
+      name: string
+      domain: string | default="learnops.local"
+      ingress:
+        enabled: boolean | default=false
+    status:
+      # Fields the controller will inject into instances status.
+      deploymentConditions: ${deployment.status.conditions}
+      availableReplicas: ${deployment.status.availableReplicas}
+
+  resources:
+    - id: deployment
+      template:
+        apiVersion: apps/v1
+        kind: Deployment
+        metadata:
+          name: ${schema.spec.name} # Use the name provided by user
+        spec:
+          replicas: 1
+          selector:
+            matchLabels:
+              app: ${schema.spec.name}
+          template:
+            metadata:
+              labels:
+                app: ${schema.spec.name}
+              annotations:
+                learnops/name: "Gitea"
+                learnops/description: "Git server"
+                learnops/url: https://${schema.spec.name}.${schema.metadata.namespace}.${schema.spec.domain}
+            spec:
+              containers:
+                - name: ${schema.spec.name}
+                  image: gitea/gitea:latest
+                  imagePullPolicy: Always
+                  ports:
+                    - name: gitea
+                      containerPort: 3000
+                    - name: gitea-ssh
+                      containerPort: 22
+    - id: serviceSSH
+      template:
+        apiVersion: v1
+        kind: Service
+        metadata:
+          name: ${schema.spec.name}-ssh
+        spec:
+          selector: ${deployment.spec.selector.matchLabels} # Use the deployment selector
+          ports:
+            - name: gitea-ssh
+              protocol: TCP
+              port: 22
+              targetPort: 22
+    - id: serviceHTTP
+      template:
+        apiVersion: v1
+        kind: Service
+        metadata:
+          name: ${schema.spec.name}-http
+        spec:
+          selector: ${deployment.spec.selector.matchLabels} # Use the deployment selector
+          ports:
+            - name: gitea-http
+              protocol: TCP
+              port: 3000
+              targetPort: 3000
+    - id: ingress
+      includeWhen:
+        - ${schema.spec.ingress.enabled} # Only include if the user wants to create an Ingress
+      template:
+        apiVersion: networking.k8s.io/v1
+        kind: Ingress
+        metadata:
+          name: ${schema.spec.name}-ingress
+          annotations:
+            cert-manager.io/cluster-issuer: ca-issuer
+       
+        spec:
+          ingressClassName: nginx
+          tls:
+            - hosts:
+              - ${schema.spec.name}.${schema.metadata.namespace}.${schema.spec.domain}
+              secretName: ${schema.spec.name}-tls
+          rules:
+            - host: ${schema.spec.name}.${schema.metadata.namespace}.${schema.spec.domain}
+              http:
+                paths:
+                  - path: "/"
+                    pathType: Prefix
+                    backend:
+                      service:
+                        name: ${serviceHTTP.metadata.name} # Use the service name
+                        port:
+                          number: 3000

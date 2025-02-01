@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"platform/internal/middleware/auth"
 	"platform/pkg/courses"
+	"platform/pkg/database"
 	"platform/pkg/progress"
 
 	"github.com/google/uuid"
@@ -13,7 +14,7 @@ import (
 func RegisterRoutes(e *echo.Echo) {
 	api := e.Group("/api")
 	api.Use(
-		auth.KeycloakTokenToContextMiddleware,
+		auth.HeaderTokenToContextMiddleware,
 	)
 	api.POST("/quiz/:id/submit", CheckQuiz)
 	api.GET("/lecture/:id", func(c echo.Context) error {
@@ -32,7 +33,7 @@ func RegisterRoutes(e *echo.Echo) {
 		return c.JSON(200, quiz)
 	})
 	api.PUT("/lecture/:id/read", func(c echo.Context) error {
-		if err := progress.MarkProgress(c.Get("user_id").(uuid.UUID), uuid.MustParse(c.Param("id")), "lecture"); err != nil {
+		if err := progress.MarkProgress(c.Get("user").(*database.User).ID, uuid.MustParse(c.Param("id")), "lecture"); err != nil {
 			return c.JSON(http.StatusBadRequest, map[string]string{
 				"error": err.Error(),
 			})

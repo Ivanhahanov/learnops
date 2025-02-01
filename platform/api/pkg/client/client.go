@@ -47,7 +47,8 @@ func Init(clientToken string) *Client {
 		config.CAFile = "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
 	} else {
 		config.TLSClientConfig = rest.TLSClientConfig{
-			CAData: config.CAData,
+			CAData:   config.CAData,
+			Insecure: true,
 		}
 	}
 	client.UserConfig = config

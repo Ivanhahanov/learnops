@@ -3,86 +3,78 @@ import { Terminal } from '@xterm/xterm';
 import { AttachAddon } from '@xterm/addon-attach'
 import { FitAddon } from '@xterm/addon-fit'
 import { WebglAddon } from '@xterm/addon-webgl'
-// import '../index.css'
 import '@xterm/xterm/css/xterm.css'
 
 
-// const useWebSocketWithTimeout = (uri, timeout) => {
-
-
-
-
-
-
-
-//   return { webSocket, isConnected, error };
-// };
-
 const TerminalComponent = ({ uri }) => {
-  const [webSocket, setWebSocket] = useState(null); // Хранит объект WebSocket
-  const [error, setError] = useState(null); // Хранит ошибку подключения
-  const [isConnected, setIsConnected] = useState(false); // Статус подключения
-  const timeoutRef = useRef(null); // Сохраняем таймер
   const terminalRef = useRef(null);
+  const wsRef = useRef(null);        // WebSocket
+  const fitAddonRef = useRef(null);  // FitAddon
+  const reconnectAttempts = useRef(0);
+  const maxRetries = 5;
+  const retryDelay = 1000;
+  const isUnmounted = useRef(false);
+  const [isConnected, setIsConnected] = useState(false);
 
-  const timeout = 10000; // 5 секунд
+  const connectWebSocket = () => {
+    if (!uri || reconnectAttempts.current >= maxRetries || isUnmounted.current) return;
+
+    const schema = window.location.protocol === "https:" ? "wss" : "ws";
+    const wsUrl = `${schema}://${uri}`;
+
+    console.log(`try to reconnect ${reconnectAttempts.current + 1}/${maxRetries} to ${wsUrl}`);
+
+    const ws = new WebSocket(wsUrl);
+    wsRef.current = ws;
+
+    ws.onopen = () => {
+      console.log("websocket connected");
+      setIsConnected(true);
+      reconnectAttempts.current = 0;
+
+      const terminal = new Terminal({
+        cursorBlink: true,
+        cursorStyle: "block",
+        fontSize: 14,
+      });
+
+      const fitAddon = new FitAddon();
+      terminal.loadAddon(fitAddon);
+      fitAddonRef.current = fitAddon;
+
+      terminal.open(terminalRef.current);
+      fitAddon.fit();
+
+      const attachAddon = new AttachAddon(ws);
+      terminal.loadAddon(attachAddon);
+    };
+
+    ws.onclose = () => {
+      console.log("websocket closed");
+      setIsConnected(false);
+
+      if (reconnectAttempts.current < maxRetries && !isUnmounted.current) {
+        reconnectAttempts.current += 1;
+        setTimeout(connectWebSocket, retryDelay);
+      }
+    };
+
+    ws.onerror = () => {
+      console.log("websocket error");
+    };
+  };
 
   useEffect(() => {
+    isUnmounted.current = false; // Сбрасываем флаг при монтировании
+    connectWebSocket();
 
-
-    const ws = new WebSocket(uri);
-
-    // Обработчик успешного подключения
-    ws.onopen = () => {
-      clearTimeout(timeoutRef.current); // Очищаем таймер
-      setWebSocket(ws);
-      setIsConnected(true);
-      const attachAddon = new AttachAddon(ws);
-      const fitAddon = new FitAddon();
-      const webglAddon = new WebglAddon();
-      const terminal = new Terminal({
-        cursorBlink: "block",
-        // theme: { background: "dimgrey", cursor: "magenta", selectionBackground: "red" },
-        cursorStyle: "block",
-        // rows: 47,
-        // cols: 118,
-      });
-      // Todo: 
-      // add this commands on start terminal
-      // stty rows 49
-      // stty cols 119
-
-
-      terminal.loadAddon(fitAddon);
-      terminal.loadAddon(webglAddon);
-      terminal.loadAddon(attachAddon);
-      terminal.open(terminalRef.current);
-
-      fitAddon.fit();
-    };
-
-    // Обработчик ошибок
-    ws.onerror = (err) => {
-      clearTimeout(timeoutRef.current); // Очищаем таймер
-      setError("WebSocket error occurred");
-    };
-
-    // Обработчик закрытия
-    ws.onclose = () => {
-      clearTimeout(timeoutRef.current);
-      if (!isConnected) {
-        setError("WebSocket connection was closed before it was established");
-      }
-    };
-
-    // Очистка при размонтировании компонента
     return () => {
-      clearTimeout(timeoutRef.current);
-      if (ws) {
-        ws.close();
-      }
+      isUnmounted.current = true; // Фиксируем, что компонент размонтирован
+      wsRef.current?.close();
     };
-  }, [uri, timeout]);
+  }, [uri]);
+
+
 
 
   return (

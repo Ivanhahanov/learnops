@@ -5,6 +5,7 @@ import { useState, useEffect, useContext, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import { useAuth } from "../context/OAuthContext";
 import { useTask } from "../context/TaskContext";
+import FlowModal from "./FlowModal";
 
 
 const Workspace = () => {
@@ -31,7 +32,7 @@ const Workspace = () => {
         try {
             const { uri, status } = await startSandbox(name);
             setSandboxUri(uri);
-            setSandboxStatus(status.toLowerCase());
+            //setSandboxStatus(status.toLowerCase());
         } catch (err) {
             console.log(err)
         }
@@ -49,7 +50,7 @@ const Workspace = () => {
             launchSandbox();
             // wait for task
             let schema = (location.protocol == "https:" ? "wss:" : "ws:")
-            let uri = `${schema}//${location.host}/api/status/${name}?token=${user.id_token}&name=${user.profile.preferred_username}`
+            let uri = `${schema}//${location.host}/api/status/${name}?token=${user.id_token}`
             const socket = new WebSocket(uri);
 
             socket.onmessage = (e) => {
@@ -77,11 +78,6 @@ const Workspace = () => {
         }
     }, []);
 
-
-    // If page is in loading state, display
-    // loading message. Modify it as per your
-    // requirement.
-
     const tabs = ["Terminal", "IDE"];
     const tabsComponents = {
         "Terminal": <TerminalComponent uri={sandboxUri} />,
@@ -90,9 +86,9 @@ const Workspace = () => {
 
     const [active, setActive] = useState(tabs[0]);
 
-    if (sandboxStatus != "ready") {
+    if (sandboxStatus !== "ready") {
         return (
-            <div className="flex flex-col items-center justify-center h-full skeleton">
+            <div className="flex flex-col items-center justify-center h-[calc(100vh-5em)] skeleton">
                 <span className="loading loading-spinner loading-lg"></span>
                 <p>Loading the workspace</p>
                 <p>{sandboxStatus}</p>
@@ -101,33 +97,22 @@ const Workspace = () => {
     }
     // If page is not in loading state, display page.
     else {
-        // return (
-        //     <div role="tablist" className="tabs tabs-lifted tabs-xs">
-        //         <input type="radio" name="my_tabs_1" checked="checked" role="tab" className="tab" aria-label="Terminal" />
-        //         <div role="tabpanel" className="tab-content">
-        //             <TerminalComponent
-        //                 id={id}
-        //             />
-        //         </div>
-        //         <input type="radio" name="my_tabs_1" role="tab" className="tab" aria-label="IDE" />
-        //         <div role="tabpanel" className="tab-content">
-        //             <IDE />
-        //         </div>
-        //     </div>
-        // );
         const btnBaseClassName = "join-item btn btn-xs hover:bg-base-content hover:text-base-100"
         return (
             <>
-                <div className="join p-1 pl-3">
-                    {tabs.map((type) => (
-                        <div
-                            className={active === type ? `${btnBaseClassName} bg-base-content text-base-100` : btnBaseClassName}
-                            active={active === type}
-                            onClick={() => setActive(type)}
-                        >
-                            {type}
-                        </div>
-                    ))}
+                <div className="flex justify-between">
+                    <div className="join p-1 pl-3">
+                        {tabs.map((type) => (
+                            <div
+                                className={active === type ? `${btnBaseClassName} bg-base-content text-base-100` : btnBaseClassName}
+                                active={active === type}
+                                onClick={() => setActive(type)}
+                            >
+                                {type}
+                            </div>
+                        ))}
+                    </div>
+                    <FlowModal />
                 </div>
                 {tabsComponents[active]}
             </>

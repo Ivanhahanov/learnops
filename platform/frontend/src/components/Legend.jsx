@@ -33,7 +33,7 @@ const Legend = () => {
     const navigate = useNavigate();
 
     const handleSubmit = async () => {
-        fetch(`/api/task/stop/${name}`, {
+        fetch("/api/task/stop", {
             headers: {
                 'Authorization': 'Bearer ' + String(user.id_token)
             }

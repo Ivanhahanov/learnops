@@ -46,6 +46,7 @@ type Task struct {
 	Title    string    `gorm:"not null"`
 	Name     string    `gorm:"not null"`
 	ModuleID uuid.UUID `gorm:"not null"`
+	Manifest string    `gorm:"type:text"`
 	Readme   string    `gorm:"type:text"` // Readme content loaded from file
 	Validate string    `gorm:"type:text"` // Validation script loaded from file
 }

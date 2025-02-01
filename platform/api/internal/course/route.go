@@ -9,7 +9,7 @@ import (
 func RegisterRoutes(e *echo.Echo) {
 	api := e.Group("/api")
 	api.Use(
-		auth.KeycloakTokenToContextMiddleware,
+		auth.HeaderTokenToContextMiddleware,
 	)
 	api.GET("/courses", Courses)
 	// api.POST("/courses/upload", UploadCourses)

@@ -52,6 +52,7 @@ func (c *Course) EnrichFiles() {
 		for _, task := range module.Tasks {
 			task.Readme = c.getTaskText(module.Name, task.Name)
 			task.Validate = c.getTaskValidationScript(module.Name, task.Name)
+			task.Manifest = c.getTaskManifest(module.Name, task.Name)
 		}
 		for _, lecture := range module.Lectures {
 			lecture.Content = c.getLectureText(module.Name, lecture.Name)
@@ -61,7 +62,9 @@ func (c *Course) EnrichFiles() {
 		}
 	}
 }
-
+func (c *Course) getTaskManifest(module, name string) string {
+	return readFile(path.Join(c.BaseDir, module, name, "manifest.yml"))
+}
 func (c *Course) getTaskText(module, name string) string {
 	return readFile(path.Join(c.BaseDir, module, name, "README.md"))
 }
@@ -74,11 +77,17 @@ func (c *Course) getTaskValidationScript(module, name string) string {
 func getTaskHints() string { return "" }
 
 func readFile(path string) string {
-	data, err := os.ReadFile(path)
-	if err != nil {
+	if _, err := os.Stat(path); err == nil {
+		data, err := os.ReadFile(path)
+		if err != nil {
+			panic(err)
+		}
+		return string(data)
+	} else if os.IsNotExist(err) {
+		return ""
+	} else {
 		panic(err)
 	}
-	return string(data)
 }
 
 func (c *Course) readQuiz(module, name string) []*database.Question {

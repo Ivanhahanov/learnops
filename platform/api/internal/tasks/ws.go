@@ -3,6 +3,7 @@ package tasks
 import (
 	"fmt"
 	"net/http"
+	"platform/pkg/database"
 	"platform/pkg/tasks/controller"
 
 	"github.com/gorilla/websocket"
@@ -25,11 +26,8 @@ func handleWebSocket(c echo.Context) error {
 
 	// Запускаем наблюдение за статусом Pod
 	controller.NewController(
-		c.QueryParam("name"),
-		c.QueryParam("token"),
-		c.Param("name"),
-		"terminal",
-		conn,
-	).Watch()
+		c.Get("user").(*database.User),
+		c.Get("token").(string),
+	).Watch("terminal", conn)
 	return nil
 }
