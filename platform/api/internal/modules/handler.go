@@ -26,7 +26,7 @@ func CheckQuiz(c echo.Context) error {
 		return fmt.Errorf("Ошибка проверки ответов:", err)
 	}
 	if results.Status == "success" {
-		if err := progress.MarkProgress(c.Get("user_id").(uuid.UUID), quizID, "quiz"); err != nil {
+		if err := progress.MarkProgress(c.Get("user").(*database.User).ID, quizID, "quiz"); err != nil {
 			return c.JSON(http.StatusBadRequest, map[string]string{
 				"error": err.Error(),
 			})

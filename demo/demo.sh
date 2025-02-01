@@ -95,7 +95,7 @@ helm install capsule oci://ghcr.io/projectcapsule/charts/capsule --version 0.7.0
 
 kubectl wait --namespace ingress-nginx --for=condition=ready pod --selector=app.kubernetes.io/component=controller --timeout=120s
 kubectl wait --namespace capsule-system --for=condition=ready pod --selector=app.kubernetes.io/instance=capsule --timeout=100s
-
+helm install kro oci://ghcr.io/kro-run/kro/kro --namespace kro --create-namespace 
 helm upgrade --install keycloak --wait --timeout 15m \
   --namespace keycloak --create-namespace \
   oci://registry-1.docker.io/bitnamicharts/keycloak \
@@ -158,7 +158,7 @@ provider "keycloak" {
 }
 locals {
   realm_id = "master"
-  groups   = ["learnops-admin, "projectcapsule.dev"]
+  groups   = ["learnops-admin", "projectcapsule.dev"]
   user_groups = {
     user   = ["projectcapsule.dev"]
     learnops-admin  = ["learnops-admin"]

@@ -37,13 +37,12 @@ func tokenToContextMiddleware(getToken func(c echo.Context) string) echo.Middlew
 				Name:  claims.Name,
 				Email: claims.Email,
 			}
+
 			findOrRegisterUser(&user)
 
-			c.Set("name", user.Name)
+			c.Set("user", &user)
 			c.Set("groups", claims.Groups)
 			c.Set("token", bearerToken)
-			c.Set("user_id", user.ID)
-
 			return next(c)
 		}
 	}
@@ -57,7 +56,6 @@ func findOrRegisterUser(user *database.User) error {
 	if ok {
 		*user = *(cachedUser.(*database.User))
 	} else {
-
 		db := database.DbManager()
 		if err := db.FirstOrCreate(&user, database.User{Name: user.Name}).Error; err != nil {
 			return fmt.Errorf("Failed to fetch or create user")

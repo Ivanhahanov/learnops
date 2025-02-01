@@ -1,0 +1,15 @@
+apiVersion: kro.run/v1alpha1
+kind: Terminal
+metadata:
+  name: users-terminal
+spec:
+  name: terminal
+---
+apiVersion: kro.run/v1alpha1
+kind: Gitea
+metadata:
+  name: users-gitea
+spec:
+  name: gitea
+  ingress:
+    enabled: true

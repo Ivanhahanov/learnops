@@ -158,9 +158,9 @@ const ModulesPage = () => {
                                     key={module.id}
                                     className="mb-3 p-4 border border-base-300 bg-base-100 rounded-md shadow"
                                 >
-                                    <div className="flex justify-between items-center flex-wrap gap-4">
-                                        <h2 className="text-lg font-bold flex-grow truncate">{module.title}</h2>
-                                        <div className="flex items-center gap-4">
+                                    <div className="flex justify-between items-center min-w-0 flex-grow gap-4">
+                                        <h2 className="text-lg font-bold flex-grow truncate ">{module.title}</h2>
+                                        <div className="flex items-center gap-4 shrink-0">
                                             <div className="flex items-center gap-4 text-sm font-medium">
                                                 <div className="flex items-center gap-1">
                                                     <span className="text-xl">

@@ -5,40 +5,46 @@ import (
 	"fmt"
 	"log"
 	k8s_client "platform/pkg/client"
-	"platform/pkg/config"
-	"platform/pkg/utils"
+	"platform/pkg/database"
+	"strings"
 	"time"
 
 	capsulev1beta2 "github.com/projectcapsule/capsule/api/v1beta2"
 	corev1 "k8s.io/api/core/v1"
-	networkingv1 "k8s.io/api/networking/v1"
+	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/util/intstr"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/apimachinery/pkg/util/yaml"
+	"k8s.io/client-go/discovery"
+	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 type Capsule struct {
-	Tenant    string
-	User      string
-	UserID    string
-	Namespace string
-	Client    client.Client
-	ClientSet *kubernetes.Clientset
+	User         *database.User
+	Namespace    string
+	Client       client.Client
+	ClientSet    *kubernetes.Clientset
+	ClientConfig *rest.Config
 }
 
-func InitCapsule(tenant, user, userId, token string) *Capsule {
+func InitCapsule(user *database.User, token string) *Capsule {
 	var err error
-	// init capsule struct
-	capsule := &Capsule{
-		Tenant:    tenant,
-		User:      user,
-		UserID:    userId,
-		Namespace: fmt.Sprintf("%s-%s", tenant, userId),
-	}
+	var capsule = &Capsule{}
 
+	if user != nil {
+		// init capsule struct
+		capsule = &Capsule{
+			User:      user,
+			Namespace: user.ID.String(),
+		}
+	}
 	scheme := runtime.NewScheme()
 	_ = capsulev1beta2.AddToScheme(scheme)
 	_ = corev1.AddToScheme(scheme)
@@ -49,6 +55,7 @@ func InitCapsule(tenant, user, userId, token string) *Capsule {
 	if token != "" {
 		c := k8s_client.Init(token)
 		capsule.ClientSet = c.UserClient
+		capsule.ClientConfig = c.UserConfig
 	}
 	return capsule
 }
@@ -57,11 +64,17 @@ func (capsule *Capsule) createTenant() error {
 	var quota int32 = 2
 	tenant := &capsulev1beta2.Tenant{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: capsule.Tenant,
+			Name: capsule.User.ID.String(),
 		},
 		Spec: capsulev1beta2.TenantSpec{
 			Owners: capsulev1beta2.OwnerListSpec{
-				capsulev1beta2.OwnerSpec{Name: capsule.User, Kind: "User"},
+				capsulev1beta2.OwnerSpec{
+					Name: capsule.User.Name,
+					Kind: "User",
+					ClusterRoles: []string{
+						"tenant-admin",
+					},
+				},
 			},
 			NamespaceOptions: &capsulev1beta2.NamespaceOptions{
 				Quota: &quota,
@@ -86,121 +99,95 @@ func (capsule *Capsule) createNamespace() error {
 	return nil
 }
 
-func (capsule *Capsule) runTerminal() error {
-	// if local
-	arg := []string{
-		// fmt.Sprintf("--path-xtermjs=/xterm.js", capsule.User),
-		fmt.Sprintf("--allowed-hostnames=%s", utils.GenHostName("terminal", capsule.Tenant, capsule.User)),
-	}
-	pod := &corev1.Pod{
-		ObjectMeta: metav1.ObjectMeta{
-			Annotations: map[string]string{
-				"learnops/description": "You're here",
-			},
-			Name: "terminal",
-			Labels: map[string]string{
-				"app": "terminal",
-			},
-		},
-		Spec: corev1.PodSpec{
-			Containers: []corev1.Container{
-				{
-					Name:  "terminal",
-					Image: "explabs/terminal-agent",
-					Args:  arg,
-				},
-			},
-		},
+func getGVR(discoveryClient discovery.DiscoveryInterface, gvk schema.GroupVersionKind) (schema.GroupVersionResource, error) {
+	// Получаем список всех API-ресурсов
+	apiResourceList, err := discoveryClient.ServerPreferredResources()
+	if err != nil {
+		if meta.IsNoMatchError(err) {
+			return schema.GroupVersionResource{}, fmt.Errorf("ресурс %s не найден в API", gvk.Kind)
+		}
+		return schema.GroupVersionResource{}, err
 	}
 
-	if _, err := capsule.ClientSet.CoreV1().Pods(capsule.Namespace).Create(context.TODO(), pod, metav1.CreateOptions{}); err != nil {
-		return err
+	// Перебираем ресурсы, ищем нужный Kind
+	for _, apiGroup := range apiResourceList {
+		gv, err := schema.ParseGroupVersion(apiGroup.GroupVersion)
+		if err != nil {
+			continue
+		}
+
+		for _, resource := range apiGroup.APIResources {
+			if resource.Kind == gvk.Kind {
+				return schema.GroupVersionResource{
+					Group:    gv.Group,
+					Version:  gv.Version,
+					Resource: resource.Name,
+				}, nil
+			}
+		}
+	}
+
+	return schema.GroupVersionResource{}, fmt.Errorf("cant'find gvr %s", gvk.Kind)
+}
+
+func (capsule *Capsule) runManifest(manifest string) error {
+	// Создаем dynamic client
+	dynClient, err := dynamic.NewForConfig(capsule.ClientConfig)
+	if err != nil {
+		return fmt.Errorf("can't create client: %v", err)
+	}
+
+	// Создаем Discovery API клиент
+	discoveryClient, err := discovery.NewDiscoveryClientForConfig(capsule.ClientConfig)
+	if err != nil {
+		return fmt.Errorf("can't create discovery client: %v", err)
+	}
+
+	// Разделяем файл на отдельные манифесты
+	yamlDecoder := yaml.NewYAMLOrJSONDecoder(strings.NewReader(manifest), 4096)
+
+	for {
+		obj := &unstructured.Unstructured{}
+		err = yamlDecoder.Decode(obj)
+		if err != nil {
+			break // конец файла
+		}
+
+		// Получаем GVK объекта
+		gvk := obj.GroupVersionKind()
+
+		// Получаем GVR (динамически через Discovery API)
+		gvr, err := getGVR(discoveryClient, gvk)
+		if err != nil {
+			log.Printf("can't find %s: %v\n", gvk.Kind, err)
+			continue
+		}
+
+		// Проверяем, существует ли ресурс
+		_, err = dynClient.Resource(gvr).Namespace(capsule.Namespace).Get(context.TODO(), obj.GetName(), metav1.GetOptions{})
+		if err == nil {
+			// Если ресурс уже есть — обновляем (patch)
+			patchData, _ := obj.MarshalJSON()
+			_, err = dynClient.Resource(gvr).Namespace(capsule.Namespace).Patch(context.TODO(), obj.GetName(), types.MergePatchType, patchData, metav1.PatchOptions{})
+			if err != nil {
+				log.Printf("update error %s/%s: %v\n", gvr.Resource, obj.GetName(), err)
+			} else {
+				log.Printf("success update: %s/%s\n", gvr.Resource, obj.GetName())
+			}
+		} else {
+			// Если ресурса нет — создаем
+			_, err = dynClient.Resource(gvr).Namespace(capsule.Namespace).Create(context.TODO(), obj, metav1.CreateOptions{})
+			if err != nil {
+				fmt.Printf("create error %s/%s: %v\n", gvr.Resource, obj.GetName(), err)
+			} else {
+				log.Printf("success create: %s/%s\n", gvr.Resource, obj.GetName())
+			}
+		}
 	}
 	return nil
 }
 
-func (capsule *Capsule) createService() error {
-	service := &corev1.Service{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: "terminal",
-		},
-		Spec: corev1.ServiceSpec{
-			Selector: map[string]string{
-				"app": "terminal",
-			},
-			Ports: []corev1.ServicePort{
-				{
-					Port:       8376,
-					TargetPort: intstr.IntOrString{IntVal: 8376},
-				},
-			},
-		},
-	}
-	if _, err := capsule.ClientSet.CoreV1().Services(capsule.Namespace).Create(context.TODO(), service, metav1.CreateOptions{}); err != nil {
-		return err
-	}
-	return nil
-}
-
-func (capsule *Capsule) createIngress() error {
-	//pathType := networkingv1.PathTypePrefix
-	pathType := networkingv1.PathTypeImplementationSpecific
-	//pathType := networkingv1.PathTypeExact
-	annotations := map[string]string{
-		"nginx.ingress.kubernetes.io/proxy-read-timeout": "3600",
-		"nginx.ingress.kubernetes.io/proxy-send-timeout": "3600",
-		"cert-manager.io/cluster-issuer":                 config.GetConfig().CAIssuer,
-	}
-	host := utils.GenHostName("terminal", capsule.Tenant, capsule.User)
-	path := "/xterm.js"
-	ingressClass := "nginx"
-
-	ingress := &networkingv1.Ingress{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:        "terminal",
-			Annotations: annotations,
-		},
-		Spec: networkingv1.IngressSpec{
-			IngressClassName: &ingressClass,
-			Rules: []networkingv1.IngressRule{
-				{
-					Host: host,
-					IngressRuleValue: networkingv1.IngressRuleValue{
-						HTTP: &networkingv1.HTTPIngressRuleValue{
-							Paths: []networkingv1.HTTPIngressPath{
-								{
-									Path:     path,
-									PathType: &pathType,
-									Backend: networkingv1.IngressBackend{
-										Service: &networkingv1.IngressServiceBackend{
-											Name: "terminal",
-											Port: networkingv1.ServiceBackendPort{
-												Number: 8376,
-											},
-										},
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-			TLS: []networkingv1.IngressTLS{
-				{
-					Hosts:      []string{host},
-					SecretName: "terminal-tls",
-				},
-			},
-		},
-	}
-
-	if _, err := capsule.ClientSet.NetworkingV1().Ingresses(capsule.Namespace).Create(context.TODO(), ingress, metav1.CreateOptions{}); err != nil {
-		return err
-	}
-	return nil
-}
-
-func (capsule *Capsule) Deploy() error {
+func (capsule *Capsule) Deploy(manifest string) error {
 	if err := capsule.createTenant(); err != nil {
 		return fmt.Errorf("create tenant err: %v", err)
 	}
@@ -215,14 +202,8 @@ func (capsule *Capsule) Deploy() error {
 	if err != nil {
 		return fmt.Errorf("wait for namespace in tenant err: %v", err)
 	}
-	if err := capsule.runTerminal(); err != nil {
-		return fmt.Errorf("run terminal err: %v", err)
-	}
-	if err := capsule.createService(); err != nil {
-		return fmt.Errorf("create service err: %v", err)
-	}
-	if err := capsule.createIngress(); err != nil {
-		return fmt.Errorf("create ingress err:  %v", err)
+	if err := capsule.runManifest(manifest); err != nil {
+		return fmt.Errorf("deploy err: %v", err)
 	}
 	return nil
 }
@@ -230,7 +211,7 @@ func (capsule *Capsule) Deploy() error {
 func (capsule *Capsule) deleteTenant() error {
 	tenant := &capsulev1beta2.Tenant{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: capsule.Tenant,
+			Name: capsule.User.ID.String(),
 		},
 	}
 	if err := capsule.Client.Delete(context.TODO(), tenant); err != nil {
@@ -258,7 +239,7 @@ func (capsule *Capsule) TenantList() (*capsulev1beta2.TenantList, error) {
 func (capsule *Capsule) WaitForNamespaceInTenant(namespace string, timeout time.Duration) error {
 
 	var tenant capsulev1beta2.Tenant
-	tenantKey := client.ObjectKey{Name: capsule.Tenant}
+	tenantKey := client.ObjectKey{Name: capsule.User.ID.String()}
 
 	// Устанавливаем контекст с таймаутом
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
@@ -271,12 +252,12 @@ func (capsule *Capsule) WaitForNamespaceInTenant(namespace string, timeout time.
 	for {
 		select {
 		case <-ctx.Done():
-			return fmt.Errorf("timeout exceeded while waiting for namespace '%s' in tenant '%s'", namespace, capsule.Tenant)
+			return fmt.Errorf("timeout exceeded while waiting for namespace '%s' in tenant '%s'", namespace, capsule.User.ID.String())
 		case <-ticker.C:
 			// Получаем Tenant из кластера
 			err := capsule.Client.Get(ctx, tenantKey, &tenant)
 			if err != nil {
-				return fmt.Errorf("failed to get tenant '%s': %v", capsule.Tenant, err)
+				return fmt.Errorf("failed to get tenant '%s': %v", capsule.User.ID.String(), err)
 			}
 
 			// Проверяем, появился ли ожидаемый namespace
@@ -292,7 +273,7 @@ func (capsule *Capsule) WaitForNamespaceInTenant(namespace string, timeout time.
 func (capsule *Capsule) WaitForTenantActive(timeout time.Duration) error {
 
 	var tenant capsulev1beta2.Tenant
-	tenantKey := client.ObjectKey{Name: capsule.Tenant}
+	tenantKey := client.ObjectKey{Name: capsule.User.ID.String()}
 
 	// Устанавливаем контекст с таймаутом
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
@@ -305,12 +286,12 @@ func (capsule *Capsule) WaitForTenantActive(timeout time.Duration) error {
 	for {
 		select {
 		case <-ctx.Done():
-			return fmt.Errorf("timeout exceeded while waiting for tenant '%s'", capsule.Tenant)
+			return fmt.Errorf("timeout exceeded while waiting for tenant '%s'", capsule.User.ID.String())
 		case <-ticker.C:
 			// Получаем Tenant из кластера
 			err := capsule.Client.Get(ctx, tenantKey, &tenant)
 			if err != nil {
-				return fmt.Errorf("failed to get tenant '%s': %v", capsule.Tenant, err)
+				return fmt.Errorf("failed to get tenant '%s': %v", capsule.User.ID.String(), err)
 			}
 			if tenant.Status.State == "Active" {
 				return nil

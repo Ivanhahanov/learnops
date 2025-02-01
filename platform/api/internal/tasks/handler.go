@@ -2,11 +2,11 @@ package tasks
 
 import (
 	"net/http"
+	"platform/pkg/database"
 	"platform/pkg/tasks"
 	"platform/pkg/tasks/controller"
 	"platform/pkg/tasks/provider"
 
-	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 )
 
@@ -21,15 +21,16 @@ func Readme(c echo.Context) error {
 func RunTask(c echo.Context) error {
 	taskName := c.Param("name")
 
-	err := provider.InitCapsule(
-		taskName,
-		c.Get("name").(string),
-		c.Get("user_id").(uuid.UUID).String(),
-		c.Get("token").(string),
-	).Deploy()
+	var task database.Task
+	err := database.DbManager().Select("manifest").Where("name = ?", taskName).First(&task).Error
 	if err != nil {
-		return err
+		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
+
+	err = provider.InitCapsule(
+		c.Get("user").(*database.User),
+		c.Get("token").(string),
+	).Deploy(task.Manifest)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
@@ -38,10 +39,8 @@ func RunTask(c echo.Context) error {
 }
 
 func StopTask(c echo.Context) error {
-	taskName := c.Param("name")
-	err := provider.InitCapsule(taskName,
-		c.Get("name").(string),
-		c.Get("user_id").(uuid.UUID).String(),
+	err := provider.InitCapsule(
+		c.Get("user").(*database.User),
 		c.Get("token").(string),
 	).Destroy()
 
@@ -55,19 +54,17 @@ func StopTask(c echo.Context) error {
 func VerifyTask(c echo.Context) error {
 	taskName := c.Param("name")
 	result := tasks.VerifyTask(
-		c.Get("user_id").(uuid.UUID),
-		taskName,
+		c.Get("user").(*database.User).ID,
 		c.Get("token").(string),
+		taskName,
 	)
 	return c.JSON(http.StatusOK, result)
 }
 
 func GetServiceMap(c echo.Context) error {
 	serviceMap, err := controller.NewController(
-		c.Get("name").(string),
-		c.Get("user_id").(uuid.UUID).String(),
+		c.Get("user").(*database.User),
 		c.Get("token").(string),
-		c.Param("name"),
 	).GetInfo()
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())

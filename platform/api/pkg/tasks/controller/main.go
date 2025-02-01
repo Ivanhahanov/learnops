@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"platform/pkg/client"
+	"platform/pkg/database"
 	"platform/pkg/utils"
 	"time"
 
@@ -14,10 +15,8 @@ import (
 )
 
 type Controller struct {
-	User      string
-	UserID    string
+	User      *database.User
 	Token     string
-	Task      string
 	Namespace string
 	ExpiredAt string
 }
@@ -44,42 +43,51 @@ type Auth struct {
 
 var maxAge = utils.MustDuration(utils.GetIntEnv("CLEANUP_CONTROLLER_MAX_AGE", 10)) * time.Minute
 
-func NewController(user, userId, token, task string) *Controller {
+func NewController(user *database.User, token string) *Controller {
 	return &Controller{
 		User:      user,
-		UserID:    userId,
 		Token:     token,
-		Task:      task,
-		Namespace: fmt.Sprintf("%s-%s", task, userId),
+		Namespace: user.ID.String(),
 		ExpiredAt: fmt.Sprintf("%d", time.Now().Add(maxAge).Unix()),
 	}
 }
-func (c *Controller) CheckIfPodExists(name string) error {
+func (c *Controller) CheckIfDeploymentExists(name string) error {
 	k8s := client.Init(c.Token)
 	const maxRetries = 10                 // Максимальное количество попыток проверки существования Pod
 	const retryInterval = 1 * time.Second // Интервал между попытками
 
-	var podFound bool
+	var deploymentFound bool
 	for i := 0; i < maxRetries; i++ {
-		_, err := k8s.UserClient.CoreV1().Pods(c.Namespace).Get(context.TODO(), name, metav1.GetOptions{})
+		deployment, err := k8s.UserClient.AppsV1().Deployments(c.Namespace).Get(context.TODO(), name, metav1.GetOptions{})
 		if err == nil {
-			podFound = true
-			break
+			if deployment.Status.AvailableReplicas > 0 {
+				deploymentFound = true
+				break
+			}
 		}
-
-		// Если Pod не найден, ждем перед следующей попыткой
 		time.Sleep(retryInterval)
 	}
 
-	if !podFound {
-		log.Println("Can't find pod")
-		return fmt.Errorf("pod not found")
+	if !deploymentFound {
+		log.Println("Can't find a ready deployment")
+		return fmt.Errorf("deployment not found or not ready")
 	}
 	return nil
 }
 
-func (c *Controller) getIngressInfo() []Ingress { return []Ingress{} }
-func (c *Controller) getAuthInfo() []Auth       { return []Auth{} }
+func (c *Controller) getIngressInfo(pod v1.Pod) []Ingress {
+	url, ok := pod.Annotations["learnops/url"]
+	if !ok {
+		return []Ingress{}
+	}
+	return []Ingress{
+		{
+			Name: "Link",
+			Url:  url,
+		},
+	}
+}
+func (c *Controller) getAuthInfo() []Auth { return []Auth{} }
 
 func (c *Controller) GetInfo() ([]StatusMessage, error) {
 	k8s := client.Init(c.Token)
@@ -90,10 +98,10 @@ func (c *Controller) GetInfo() ([]StatusMessage, error) {
 	info := []StatusMessage{}
 	for _, pod := range pods.Items {
 		info = append(info, StatusMessage{
-			Name:        pod.Name,
+			Name:        pod.Annotations["learnops/name"],
 			Status:      string(pod.Status.Phase),
 			Description: pod.Annotations["learnops/description"],
-			Ingress:     c.getIngressInfo(),
+			Ingress:     c.getIngressInfo(pod),
 			Auth:        c.getAuthInfo(),
 		})
 	}
@@ -101,27 +109,25 @@ func (c *Controller) GetInfo() ([]StatusMessage, error) {
 }
 
 func (c *Controller) Watch(name string, wsConn *websocket.Conn) error {
-	err := c.CheckIfPodExists(name)
+	err := c.CheckIfDeploymentExists(name)
 	if err != nil {
 		wsConn.WriteJSON(StatusMessage{
-			Name:   c.Task,
+			Name:   c.User.ID.String(),
 			Status: "not-found",
 		})
 		return err
 	}
 	k8s := client.Init(c.Token)
-	uri := fmt.Sprintf("wss://%s/xterm.js", utils.GenHostName(name, c.Task, c.User))
 	statusMsg := StatusMessage{
-		Name:      c.Task,
-		Uri:       uri,
+		Name:      c.User.ID.String(),
 		ExpiredAt: c.ExpiredAt,
 	}
 
 	watcher, err := k8s.UserClient.CoreV1().Pods(c.Namespace).Watch(context.TODO(), metav1.ListOptions{
-		FieldSelector: fmt.Sprintf("metadata.name=%s", name),
+		LabelSelector: fmt.Sprintf("app=%s", name),
 	})
 	if err != nil {
-		log.Println("Ошибка создания watcher:", err)
+		log.Println("can't create watcher:", err)
 		statusMsg.Status = "error"
 		wsConn.WriteJSON(statusMsg)
 		return err
@@ -131,7 +137,7 @@ func (c *Controller) Watch(name string, wsConn *websocket.Conn) error {
 	for event := range watcher.ResultChan() {
 		pod, ok := event.Object.(*v1.Pod)
 		if !ok {
-			log.Println("Ошибка преобразования объекта в Pod")
+			log.Println("can't convert to Pod")
 			continue
 		}
 
@@ -142,15 +148,13 @@ func (c *Controller) Watch(name string, wsConn *websocket.Conn) error {
 			wsConn.WriteJSON(statusMsg)
 		case v1.PodRunning:
 			statusMsg.Status = "ready"
+			statusMsg.Uri = pod.Annotations["learnops/ws"]
 			wsConn.WriteJSON(statusMsg)
 			return nil
-		case v1.PodFailed:
+		case v1.PodFailed, v1.PodUnknown:
 			statusMsg.Status = "failed"
 			wsConn.WriteJSON(statusMsg)
 			return nil
-		case v1.PodUnknown:
-			statusMsg.Status = "failed"
-			wsConn.WriteJSON(statusMsg)
 		}
 	}
 	return nil

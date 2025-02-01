@@ -3,9 +3,9 @@ package tasks
 import (
 	"fmt"
 	"net/http"
+	"platform/pkg/database"
 	"platform/pkg/tasks/controller"
 
-	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 	"github.com/labstack/echo/v4"
 )
@@ -26,10 +26,8 @@ func handleWebSocket(c echo.Context) error {
 
 	// Запускаем наблюдение за статусом Pod
 	controller.NewController(
-		c.Get("name").(string),
-		c.Get("user_id").(uuid.UUID).String(),
+		c.Get("user").(*database.User),
 		c.Get("token").(string),
-		c.Param("name"),
 	).Watch("terminal", conn)
 	return nil
 }
