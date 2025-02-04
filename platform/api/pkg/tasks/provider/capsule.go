@@ -208,10 +208,10 @@ func (capsule *Capsule) Deploy(manifest string) error {
 	return nil
 }
 
-func (capsule *Capsule) deleteTenant() error {
+func (capsule *Capsule) deleteTenant(name string) error {
 	tenant := &capsulev1beta2.Tenant{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: capsule.User.ID.String(),
+			Name: name,
 		},
 	}
 	if err := capsule.Client.Delete(context.TODO(), tenant); err != nil {
@@ -220,8 +220,8 @@ func (capsule *Capsule) deleteTenant() error {
 	return nil
 }
 
-func (capsule *Capsule) Destroy() error {
-	if err := capsule.deleteTenant(); err != nil {
+func (capsule *Capsule) Destroy(name string) error {
+	if err := capsule.deleteTenant(name); err != nil {
 		return err
 	}
 	return nil

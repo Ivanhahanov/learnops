@@ -39,10 +39,11 @@ func RunTask(c echo.Context) error {
 }
 
 func StopTask(c echo.Context) error {
+	user := c.Get("user").(*database.User)
 	err := provider.InitCapsule(
-		c.Get("user").(*database.User),
+		user,
 		c.Get("token").(string),
-	).Destroy()
+	).Destroy(user.ID.String())
 
 	if err != nil {
 		return c.String(http.StatusInternalServerError, err.Error())

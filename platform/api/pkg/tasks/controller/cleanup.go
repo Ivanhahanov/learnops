@@ -50,5 +50,5 @@ func (c *CleanupController) cleanupTenants() {
 }
 
 func (c *CleanupController) deleteTenant(tenantName string) error {
-	return provider.InitCapsule(nil, "").Destroy()
+	return provider.InitCapsule(nil, "").Destroy(tenantName)
 }
