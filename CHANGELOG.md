@@ -1,3 +1,10 @@
+## [0.4.1](https://github.com/Ivanhahanov/learnops/compare/v0.4.0...v0.4.1) (2025-03-31)
+
+
+### Bug Fixes
+
+* clenup controller ([3bc5bdb](https://github.com/Ivanhahanov/learnops/commit/3bc5bdb9160f6dd913bdcd60071f6f39ed3ab46e))
+
 # [0.4.0](https://github.com/Ivanhahanov/learnops/compare/v0.3.1...v0.4.0) (2025-02-01)
 
 
