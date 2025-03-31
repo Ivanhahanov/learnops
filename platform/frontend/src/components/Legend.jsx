@@ -10,8 +10,44 @@ import "../index.css"
 import { useAuth } from '../context/OAuthContext'
 import { useTask } from '../context/TaskContext'
 import confetti from "canvas-confetti";
+import { MdClose, MdOutlineKeyboardArrowUp } from 'react-icons/md';
+import { FiCopy, FiCheck } from 'react-icons/fi';
 
-const Legend = () => {
+
+const Pre = ({ children }) => (
+        <div className="relative ">
+            <pre className="font-mono text-sm p-4 pr-12 rounded-lg overflow-x-auto bg-neutral text-neutral-content">
+                {children}
+            </pre>
+            <CodeCopyBtn>{children}</CodeCopyBtn>
+        </div>
+);
+
+function CodeCopyBtn({ children }) {
+    const [copyOk, setCopyOk] = useState(false);
+
+    const handleClick = () => {
+        navigator.clipboard.writeText(children.props.children);
+        setCopyOk(true);
+        setTimeout(() => setCopyOk(false), 1000);
+    };
+
+    return (
+        <button
+            onClick={handleClick}
+            className="absolute right-4 top-4 rounded-md bg-neutral/70 hover:bg-neutral/90 
+               transition-all shadow-sm border border-neutral/50 text-neutral-content"
+            aria-label="Copy code"
+        >
+            {copyOk ? (
+                <FiCheck className="text-success text-base" />
+            ) : (
+                <FiCopy className="text-base-content text-base" />
+            )}
+        </button>
+    );
+}
+const Legend = ({ onClose, isMobile }) => {
     const { name } = useParams()
     const { user } = useAuth()
     const [text, setText] = useState(String);
@@ -42,60 +78,59 @@ const Legend = () => {
             .then((data) => {
                 stopTask()
                 console.log(data);
-                navigate(-1, { state: { message: "message" },  replace: true });
+                navigate(-1, { state: { message: "message" }, replace: true });
             })
             .catch((err) => {
                 console.log(err.message);
             });
     };
 
-    const Pre = ({ children }) => <pre className="blog-pre relative p-0">
-        <CodeCopyBtn>{children}</CodeCopyBtn>
-        {children}
-    </pre>
-
-
-
     return (
-        <div className="bg-base-100 shadow p-4 rounded-xl overflow-y-auto h-[calc(100vh-5rem)]">
-            <ReactMarkdown
-                className='prose pt-3 mx-auto'
-                //linkTarget='_blank'
-                //rehypePlugins={[rehypeHighlight]}
-                remarkPlugins={[remarkGfm]}
-                components={{
-                    pre: Pre,
-                    code({ node, inline, className = "code", children, ...props }) {
-                        const match = /language-(\w+)/.exec(className || '')
-                        return !inline && match ? (
-                            <SyntaxHighlighter
-                                language={match[1]}
-                                style={atomDark}
-                                customStyle={{ backgroundColor: "var(--tw-prose-pre-bg)" }}
-                                className="bg-base"
-                                PreTag="div"
-                                {...props}
-                            >
-                                {String(children).replace(/\n$/, '')}
-                            </SyntaxHighlighter>
-                        ) : (
-                            <code className={className} {...props}>
-                                {children}
-                            </code>
-                        )
-                    }
-                }}
-            >
-                {text}
-            </ReactMarkdown>
+        <div className="h-full flex flex-col bg-base-100">
+            <div className="overflow-y-auto p-4 flex-1">
+                <div className="max-w-3xl mx-auto prose prose-sm md:prose-lg"> {/* Добавлен контейнер с ограничением ширины */}
+                    <ReactMarkdown
+                        components={{
+                            pre: Pre,
+                            h1: ({ node, ...props }) => <h1 className="text-2xl font-bold mb-4 mt-2 text-primary" {...props} />,
+                            h2: ({ node, ...props }) => <h2 className="text-xl font-semibold mb-3 mt-4 text-secondary" {...props} />,
+                            p: ({ node, ...props }) => <p className="leading-relaxed text-base-content/90 text-base mb-3" {...props} />,
+                            ul: ({ node, ...props }) => <ul className="pl-6 mb-4 list-disc space-y-1" {...props} />,
+                            ol: ({ node, ...props }) => <ol className="pl-6 mb-4 list-decimal space-y-1" {...props} />
+                        }}
+                    >
 
-            <div className="divider px-4"></div>
-            <div className="pb-3 px-4 flex justify-between w-full">
-                <VerifyButton name={name} user={user} />
-                <button onClick={() => handleSubmit()} className="btn btn-sm btn-outline btn-error">Close Session</button>
+                        {text}
+                    </ReactMarkdown>
+                </div>
+            </div>
+
+            {/* Fixed Bottom Bar */}
+            <div className="sticky bottom-0 bg-base-100 border-t border-base-200 p-4 shadow-lg">
+                <div className="flex gap-2 items-center min-h-[1rem]" >
+                    <VerifyButton name={name} user={user} />
+
+                    <button
+                        onClick={handleSubmit}
+                        className="btn btn-error btn-sm gap-2"
+                    >
+                        <MdClose className="" />
+                        <span>Close Session</span>
+                    </button>
+
+                    {isMobile && (
+                        <button
+                            onClick={onClose}
+                            className="btn btn-ghost btn-square btn-sm"
+                            aria-label="Hide legend"
+                        >
+                            <MdOutlineKeyboardArrowUp className="text-xl" />
+                        </button>
+                    )}
+                </div>
             </div>
         </div>
-    )
+    );
 }
 
 function VerifyButton({ name, user }) {
@@ -111,16 +146,16 @@ function VerifyButton({ name, user }) {
                 },
             });
 
-            const data = await response.json(); // Предполагается, что ответ в формате JSON
+            const data = await response.json();
             setLoading(false)
             if (data.status === "success") {
                 setVerifyStatus("success");
-                setAlertMessage(""); 
+                setAlertMessage("");
                 confetti({
                     particleCount: 100,
                     spread: 70,
                     origin: { y: 0.6 }
-                  });
+                });
             } else if (data.status === "failed") {
                 setAlertMessage(data.answer || "Verification failed.");
                 setVerifyStatus("failed");
@@ -143,27 +178,27 @@ function VerifyButton({ name, user }) {
     }, [alertMessage]);
 
     return (
-        <div>
-           {loading ? (
-            <button className="btn btn-sm btn-outline btn-success mx-2" disabled>
-              Checking...
-            </button>
-          ) : verifyStatus === "success" ? (
-            <button className="btn btn-sm btn-success mx-2">Success!</button>
-          ) : (
-            <button
-              className="btn btn-sm btn-outline btn-success mx-2"
-              onClick={verifyChallenge}
-            >
-              Verify Challenge
-            </button>
-          )}
+        <div className='flex-1'>
+            {loading ? (
+                <button className="btn btn-sm btn-outline btn-success mx-2" disabled>
+                    Checking...
+                </button>
+            ) : verifyStatus === "success" ? (
+                <button className="btn btn-sm btn-success mx-2">Success!</button>
+            ) : (
+                <button
+                    className="btn btn-sm btn-outline btn-success mx-2"
+                    onClick={verifyChallenge}
+                >
+                    Verify Challenge
+                </button>
+            )}
 
             {/* Alert */}
             {alertMessage && (
                 <div
                     role="alert"
-                    className="alert alert-warning shadow-lg fixed top-4 left-1/2 transform -translate-x-1/2 z-50 w-1/3"
+                    className="alert alert-warning shadow-lg fixed top-4 left-1/2 transform -translate-x-1/2 z-1 w-1/3"
                 >
                     <div className="flex items-center">
                         <svg
@@ -186,28 +221,6 @@ function VerifyButton({ name, user }) {
             )}
         </div>
     );
-}
-
-
-function CodeCopyBtn({ children }) {
-    const [copyOk, setCopyOk] = React.useState(false);
-
-    const iconColor = copyOk ? 'oklch(var(--su))' : 'oklch(var(--bc))';
-    const icon = copyOk ? 'fa-check' : 'fa-copy';
-
-    const handleClick = (e) => {
-        navigator.clipboard.writeText(children.props.children);
-        setCopyOk(true);
-        setTimeout(() => {
-            setCopyOk(false);
-        }, 1000);
-    }
-
-    return (
-        <div className="code-copy-btn">
-            <i className={`fa ${icon}`} onClick={e => handleClick(e)} style={{ color: iconColor }} />
-        </div>
-    )
 }
 
 export default Legend;

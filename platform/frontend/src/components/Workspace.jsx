@@ -1,14 +1,14 @@
 import TerminalComponent from "./Xterm";
 import IDE from "./IDE";
 import React from "react";
-import { useState, useEffect, useContext, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import { useAuth } from "../context/OAuthContext";
 import { useTask } from "../context/TaskContext";
 import FlowModal from "./FlowModal";
 
 
-const Workspace = () => {
+const Workspace = ({isMobile}) => {
     const { user } = useAuth()
     const { taskInfo, startTask } = useTask()
     const { name } = useParams();
@@ -100,23 +100,24 @@ const Workspace = () => {
         const btnBaseClassName = "join-item btn btn-xs hover:bg-base-content hover:text-base-100"
         return (
             <>
-                <div className="flex justify-between">
-                    <div className="join p-1 pl-3">
-                        {tabs.map((type) => (
-                            <div
-                                className={active === type ? `${btnBaseClassName} bg-base-content text-base-100` : btnBaseClassName}
-                                active={active === type}
-                                onClick={() => setActive(type)}
-                            >
-                                {type}
-                            </div>
-                        ))}
-                    </div>
-                    <FlowModal />
+              <div className="flex justify-between items-center p-2 border-b">
+                <div className="tabs tabs-boxed tabs-sm">
+                  {tabs.map(type => (
+                    <button
+                      key={type}
+                      className={`tab ${active === type ? 'tab-active' : ''}`}
+                      onClick={() => setActive(type)}
+                    >
+                      {isMobile ? type.slice(0, 3) : type}
+                    </button>
+                  ))}
                 </div>
-                {tabsComponents[active]}
+                <FlowModal />
+              </div>
+              
+              {tabsComponents[active]}
             </>
-        );
+          );        
     }
 
 }
