@@ -1,3 +1,10 @@
+## [0.4.2](https://github.com/Ivanhahanov/learnops/compare/v0.4.1...v0.4.2) (2025-03-31)
+
+
+### Bug Fixes
+
+* remove route ([8547a93](https://github.com/Ivanhahanov/learnops/commit/8547a937138dfe73a62fc27e28bb1ff72d7717bd))
+
 ## [0.4.1](https://github.com/Ivanhahanov/learnops/compare/v0.4.0...v0.4.1) (2025-03-31)
 
 
