@@ -32,7 +32,11 @@ fi
 kind create cluster --name $CLUSTER_NAME --config  - <<EOF
 kind: Cluster
 apiVersion: kind.x-k8s.io/v1alpha4
+# networking:
+#   disableDefaultCNI: true
+#   kubeProxyMode: none
 nodes:
+# - role: worker
 - role: control-plane
   kubeadmConfigPatches:
   - |
@@ -40,7 +44,7 @@ nodes:
     nodeRegistration:
       kubeletExtraArgs:
         node-labels: "ingress-ready=true"
-
+  - |
     kind: ClusterConfiguration
     apiServer:
       extraArgs:
@@ -64,6 +68,25 @@ nodes:
     protocol: TCP
     listenAddress: "0.0.0.0"
 EOF
+
+# helm install cilium cilium --repo https://helm.cilium.io/ --version 1.16.6 \
+#   --namespace kube-system --values - <<EOF
+# kubeProxyReplacement: true
+# k8sServiceHost: kind-control-plane 
+# k8sServicePort: 6443 
+# hostServices:
+#   enabled: false
+# externalIPs:
+#   enabled: true
+# nodePort:
+#   enabled: true
+# hostPort:
+#   enabled: true
+# image:
+#   pullPolicy: IfNotPresent
+# ipam:
+#   mode: kubernetes
+# EOF
 
 echo "# Create a kubernetes secret containing the Root CA certificate and its key"
 kubectl create ns cert-manager
@@ -89,7 +112,7 @@ spec:
   ca:
     secretName: ca-key-pair
 EOF
-kubectl apply -f https://kind.sigs.k8s.io/examples/ingress/deploy-ingress-nginx.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.12.0/deploy/static/provider/kind/deploy.yaml
 
 helm install capsule oci://ghcr.io/projectcapsule/charts/capsule --version 0.7.0  -n capsule-system --create-namespace
 

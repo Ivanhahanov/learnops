@@ -4,9 +4,11 @@ go 1.22.5
 
 require (
 	github.com/coreos/go-oidc v2.2.1+incompatible
+	github.com/go-logr/logr v1.4.2
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/websocket v1.5.0
 	github.com/labstack/echo/v4 v4.13.3
+	github.com/phpdave11/gofpdf v1.4.2
 	github.com/projectcapsule/capsule v0.7.2
 	github.com/urfave/cli/v3 v3.0.0-beta1
 	golang.org/x/oauth2 v0.22.0
@@ -28,7 +30,6 @@ require (
 	github.com/evanphx/json-patch/v5 v5.9.0 // indirect
 	github.com/fsnotify/fsnotify v1.7.0 // indirect
 	github.com/fxamacker/cbor/v2 v2.7.0 // indirect
-	github.com/go-logr/logr v1.4.2 // indirect
 	github.com/go-openapi/jsonpointer v0.21.0 // indirect
 	github.com/go-openapi/jsonreference v0.21.0 // indirect
 	github.com/go-openapi/swag v0.23.0 // indirect

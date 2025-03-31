@@ -11,9 +11,7 @@ const Layout = () => {
         <TaskProvider>
           <Header />
           <main className="flex-grow bg-base-200">
-
-            <Outlet></Outlet>
-
+              <Outlet></Outlet>
           </main>
           {/* <Footer /> */}
         </TaskProvider>

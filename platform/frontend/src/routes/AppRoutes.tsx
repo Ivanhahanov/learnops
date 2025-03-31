@@ -8,6 +8,8 @@ import OAuthCallback from "../pages/OAuthCallback";
 import ProtectedRoute from "./ProtectedRoute";
 import { useNavigate } from "react-router-dom";
 import ModulesPage from "../pages/Modules";
+import AdminPanel from "../pages/Admin";
+import ProfilePage from "../pages/Profile";
 
 function Error404() {
     const navigate = useNavigate();
@@ -59,12 +61,21 @@ const router = createBrowserRouter([
                 path: 'task/:name',
                 element: <ProtectedRoute><TaskPage /></ProtectedRoute>,
             },
+            {
+                path: "profile",
+                element: <ProfilePage />,
+            },
         ],
     },
     {
         path: "/oauth/callback",
         element: <OAuthCallback />,
     },
+    {
+        path: "/admin",
+        element: <AdminPanel />,
+    },
+    
     
 ]);
 

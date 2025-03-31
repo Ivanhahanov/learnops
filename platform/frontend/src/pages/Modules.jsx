@@ -4,375 +4,429 @@ import QuizModal from "../components/QuizModal";
 import { useAuth } from "../context/OAuthContext";
 import { useParams, useLocation } from "react-router-dom";
 import TaskLink from "../components/TaskLink";
+import {
+  FiChevronDown,
+  FiChevronUp,
+  FiBook,
+  FiCheckSquare,
+  FiTerminal,
+  FiPieChart,
+  FiFilter,
+  FiLayout,
+  FiMenu,
+  FiX
+} from "react-icons/fi";
 
 const ModulesPage = () => {
-    const { user } = useAuth()
-    const [modules, setModules] = useState([])
-    const [expandedModules, setExpandedModules] = useState({});
-    const [allExpanded, setAllExpanded] = useState(false);
-    const { name } = useParams();
+  const { user } = useAuth();
+  const [modules, setModules] = useState([]);
+  const [expandedModules, setExpandedModules] = useState({});
+  const [allExpanded, setAllExpanded] = useState(false);
+  const { name } = useParams();
+  const [filter, setFilter] = useState("all");
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const location = useLocation();
 
-    const location = useLocation();
-
-    const fetchModules = async () => {
-        try {
-            const response = await fetch(`/api/course/${name}`, {
-                headers: {
-                    'Authorization': 'Bearer ' + user.id_token
-                }
-            }) // Замените на ваш API
-            const data = await response.json();
-            setModules(data);
-            // Инициализируем состояние развернутости для всех модулей
-            const initialExpandedState = data.reduce((acc, module) => {
-                acc[module.id] = false; // Все модули изначально свернуты
-                return acc;
-            }, {});
-            setExpandedModules(initialExpandedState);
-        } catch (error) {
-            console.error("Ошибка при загрузке данных:", error);
+  // Загрузка модулей
+  const fetchModules = async () => {
+    try {
+      const response = await fetch(`/api/course/${name}`, {
+        headers: {
+          Authorization: "Bearer " + user.id_token
         }
-    };
-    // hack: if use navigate(-1) reload modules info
-    useEffect(() => {
-        fetchModules();
-    }, [location.state]);
+      });
+      const data = await response.json();
+      setModules(data);
+      const initialExpandedState = data.reduce((acc, module) => {
+        acc[module.id] = false;
+        return acc;
+      }, {});
+      setExpandedModules(initialExpandedState);
+    } catch (error) {
+      console.error("Ошибка при загрузке данных:", error);
+    }
+  };
 
-    const [filter, setFilter] = useState("all");
+  useEffect(() => {
+    fetchModules();
+  }, [location.state]);
 
-    const filteredModules =
-        filter === "all"
-            ? modules
-            : modules.filter((module) =>
-                filter === "completed"
-                    ? module.completed
-                    : !module.completed
-            );
+  // Фильтрация модулей
+  const filteredModules =
+    filter === "all"
+      ? modules
+      : modules.filter(module =>
+        filter === "completed" ? module.completed : !module.completed
+      );
 
-    // Обработчик для разворачивания одного модуля
-    const toggleModule = (id) => {
-        setExpandedModules((prev) => ({
-            ...prev,
-            [id]: !prev[id],
-        }));
-    };
+  // Управление раскрытием модулей
+  const toggleModule = id => {
+    setExpandedModules(prev => ({
+      ...prev,
+      [id]: !prev[id]
+    }));
+  };
 
-    // Обработчик для кнопки "Развернуть всё"
-    const toggleAllModules = () => {
-        const newExpandedState = !allExpanded;
+  const toggleAllModules = () => {
+    const newExpandedState = !allExpanded;
+    const updatedState = modules.reduce((acc, module) => {
+      acc[module.id] = newExpandedState;
+      return acc;
+    }, {});
+    setExpandedModules(updatedState);
+    setAllExpanded(newExpandedState);
+  };
 
-        // Создаем новое состояние для всех модулей на основе данных `modules`
-        const updatedState = modules.reduce((acc, module) => {
-            acc[module.id] = newExpandedState;
-            return acc;
-        }, {});
-        console.log(updatedState, newExpandedState)
+  // Прогресс модуля
+  const calculateProgress = module => {
+    const total = module.data.length;
+    const completed = module.data.filter(row => row.completed).length;
+    return Math.round((completed / total) * 100);
+  };
 
-        setExpandedModules(updatedState);
-        setAllExpanded(newExpandedState);
-    };
+  // Управление модальными окнами
+  const [testModalStates, setTestModalStates] = useState({});
+  const [lectureModalStates, setLectureModalStates] = useState({});
+
+  const openTestModal = modalId => {
+    setTestModalStates(prev => ({ ...prev, [modalId]: true }));
+  };
+
+  const closeTestModal = modalId => {
+    setTestModalStates(prev => ({ ...prev, [modalId]: false }));
+  };
+
+  const openLectureModal = modalId => {
+    setLectureModalStates(prev => ({ ...prev, [modalId]: true }));
+  };
+
+  const closeLectureModal = modalId => {
+    setLectureModalStates(prev => ({ ...prev, [modalId]: false }));
+  };
+
+  return (
+    <div className="container mx-auto py-6 px-4 lg:px-6 max-w-7xl">
+      {/* Мобильное меню */}
+      <div className="lg:hidden mb-4 flex justify-between items-center">
+        <button
+          className="btn btn-square btn-ghost"
+          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          aria-label="Открыть меню"
+        >
+          {isMobileMenuOpen ? <FiX size={24} /> : <FiMenu size={24} />}
+        </button>
+        <div className="text-xl font-bold truncate">Прогресс курса</div>
+      </div>
+
+      <div className="flex flex-col lg:flex-row gap-6">
+        {/* Блок аналитики для мобильных */}
+        {isMobileMenuOpen && (
+          <div className="lg:hidden">
+            <div className="card bg-base-100 shadow-lg mb-4">
+              <div className="card-body p-4">
+                <CourseProgressStat modules={modules} isMobile />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Основной контент */}
+        <div className="flex-1 lg:w-8/12 xl:w-9/12">
+          {/* Заголовок */}
+          <div className="mb-6 p-4 md:p-6 bg-gradient-to-r from-primary to-blue-600 text-white rounded-xl shadow-lg">
+            <h1 className="text-xl md:text-2xl font-bold mb-2">Добро пожаловать на курс!</h1>
+            <p className="text-sm md:text-base opacity-90">Начните изучение материалов прямо сейчас</p>
+          </div>
+
+          {/* Панель фильтров */}
+          <div className="mb-6 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+            <div className="flex flex-wrap gap-2">
+              <button
+                className={`btn btn-sm ${filter === "all" ? "btn-primary" : "btn-ghost"} gap-2`}
+                onClick={() => setFilter("all")}
+              >
+                <FiLayout />
+                <span>Все</span>
+              </button>
+              <button
+                className={`btn btn-sm ${filter === "completed" ? "btn-primary" : "btn-ghost"} gap-2`}
+                onClick={() => setFilter("completed")}
+              >
+                <FiCheckSquare />
+                <span>Выполненные</span>
+              </button>
+              <button
+                className={`btn btn-sm ${filter === "incomplete" ? "btn-primary" : "btn-ghost"} gap-2`}
+                onClick={() => setFilter("incomplete")}
+              >
+                <FiFilter />
+                <span>Невыполненные</span>
+              </button>
+            </div>
+
+            <div className="flex gap-2">
+              <button
+                className="btn btn-sm btn-outline gap-2"
+                onClick={toggleAllModules}
+              >
+                {allExpanded ? "Свернуть всё" : "Развернуть всё"}
+                {allExpanded ? <FiChevronUp /> : <FiChevronDown />}
+              </button>
+            </div>
+          </div>
 
 
-    const calculateProgress = (module) => {
-        const total = module.data.length;
-        const completed = module.data.filter((row) => row.completed).length
-        return Math.round((completed / total) * 100);
-    };
+          {/* Список модулей */}
+          <div className="space-y-4">
+            {filteredModules.length > 0 ? (
+              filteredModules.map((module) => {
+                const progress = calculateProgress(module);
+                const completedTasks = module.data.filter((row) => row.type === "task" && row.completed).length;
+                const completedLectures = module.data.filter((row) => row.type === "lecture" && row.completed).length;
+                const completedQuizzes = module.data.filter((row) => row.type === "quiz" && row.completed).length;
+                const totalTasks = module.data.filter((row) => row.type === "task").length;
+                const totalLectures = module.data.filter((row) => row.type === "lecture").length;
+                const totalQuizzes = module.data.filter((row) => row.type === "quiz").length;
 
-    const [testModalStates, setTestModalStates] = useState({});
-    const openTestModal = (modalId) => {
-        setTestModalStates((prev) => ({ ...prev, [modalId]: true }));
-    };
+                return (
+                  <div
+                    key={module.id}
+                    className="card bg-base-100 shadow-lg hover:shadow-xl transition-shadow cursor-pointer group"
+                    onClick={(e) => {
+                        toggleModule(module.id);
+                      
+                    }}
+                  >
+                    <div className="card-body p-4 md:p-6">
+                      <div className="flex items-start gap-4">
+                        <div className="flex-shrink-0">
+                          <div className="p-3 bg-primary/10 rounded-lg text-primary">
+                            <FiBook className="text-2xl" />
+                          </div>
+                        </div>
 
-    const closeTestModal = (modalId) => {
-        setTestModalStates((prev) => ({ ...prev, [modalId]: false }));
-    };
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-3">
+                            <h2 className="text-lg font-bold truncate">{module.title}</h2>
+                            <div className="badge badge-primary badge-outline">
+                              {progress}%
+                            </div>
+                          </div>
 
+                          <div className="w-full bg-base-300 rounded-full h-2 mt-2">
+                            <div
+                              className="bg-primary h-2 rounded-full transition-all duration-500"
+                              style={{ width: `${progress}%` }}
+                            />
+                          </div>
 
-    const [lectureModalStates, setLectureModalStates] = useState({});
-    const openLectureModal = (modalId) => {
-        setLectureModalStates((prev) => ({ ...prev, [modalId]: true }));
-    };
+                          <div className="flex flex-wrap gap-4 mt-3 text-sm">
+                            <div className="flex items-center gap-1">
+                              <FiBook className="flex-shrink-0" />
+                              <span>{completedLectures}/{totalLectures}</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <FiTerminal className="flex-shrink-0" />
+                              <span>{completedTasks}/{totalTasks}</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <FiCheckSquare className="flex-shrink-0" />
+                              <span>{completedQuizzes}/{totalQuizzes}</span>
+                            </div>
+                          </div>
+                        </div>
 
-    const closeLectureModal = (modalId) => {
-        setLectureModalStates((prev) => ({ ...prev, [modalId]: false }));
-    };
+                        <div className="flex-shrink-0 text-gray-400 transition-transform duration-300 group-hover:text-gray-600">
+                          {expandedModules[module.id] ? (
+                            <FiChevronUp className="text-2xl" />
+                          ) : (
+                            <FiChevronDown className="text-2xl" />
+                          )}
+                        </div>
+                      </div>
 
-    return (
-        <div className="container mx-auto py-6 grid grid-cols-12 gap-6">
-            {/* Левая часть: Темы */}
-            <div className="col-span-8">
-                {/* Приветствие */}
-                <div className="mb-6 p-4 bg-primary text-white rounded-md">
-                    <h1 className="text-2xl font-bold">Добро пожаловать на курс!</h1>
-                    <p className="text-sm">Начнем изучение тем и выполнения заданий!</p>
-                </div>
-
-                {/* Фильтры и кнопка "Развернуть всё" */}
-                <div className="mb-6 flex gap-4 items-center">
-                    <div className="flex gap-2">
-                        <button
-                            className={`btn btn-xs ${filter === "all" ? "btn-primary" : "btn-outline"
-                                }`}
-                            onClick={() => setFilter("all")}
+                      {expandedModules[module.id] && (
+                        <div
+                          className="mt-4 space-y-3 border-t pt-4"
+                          onClick={(e) => e.stopPropagation()}
                         >
-                            Все
-                        </button>
-                        <button
-                            className={`btn btn-xs ${filter === "completed" ? "btn-primary" : "btn-outline"
-                                }`}
-                            onClick={() => setFilter("completed")}
-                        >
-                            Выполненные
-                        </button>
-                        <button
-                            className={`btn btn-xs ${filter === "incomplete" ? "btn-primary" : "btn-outline"
-                                }`}
-                            onClick={() => setFilter("incomplete")}
-                        >
-                            Невыполненные
-                        </button>
+                          {module.data.map((item, index) => (
+                            <div
+                              key={index}
+                              className="flex items-center p-3 rounded-lg border border-base-300 bg-base-200 gap-3 hover:bg-base-300 transition-colors"
+                            >
+                              <div className={`w-2 h-2 rounded-full flex-shrink-0 
+              ${item.completed ? "bg-primary" : "bg-gray-300"}`} />
+
+                              <div className="flex-1 min-w-0 flex items-center gap-2">
+                                {item.type === "lecture" && (
+                                  <FiBook className="text-lg text-primary flex-shrink-0" />
+                                )}
+                                {item.type === "task" && (
+                                  <FiTerminal className="text-lg text-accent flex-shrink-0" />
+                                )}
+                                {item.type === "quiz" && (
+                                  <FiCheckSquare className="text-lg text-info flex-shrink-0" />
+                                )}
+                                <span className="truncate">{item.title}</span>
+                              </div>
+
+                              <div className="ml-auto flex gap-2 flex-shrink-0">
+                                {item.type === "lecture" && (
+                                  <>
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        openLectureModal(item.id);
+                                      }}
+                                      className="btn btn-sm btn-primary gap-2 min-w-[120px]"
+                                    >
+                                      <FiBook /> Читать
+                                    </button>
+                                    <LectureModal
+                                      lectureId={item.id}
+                                      isOpen={lectureModalStates[item.id] || false}
+                                      onClose={() => closeLectureModal(item.id)}
+                                      setModules={setModules}
+                                    />
+                                  </>
+                                )}
+                                {item.type === "task" && (
+                                  <TaskLink name={item.name} id={item.id}>
+                                    <button
+                                      className="btn btn-sm btn-accent gap-2 min-w-[120px]"
+                                      onClick={(e) => e.stopPropagation()}
+                                    >
+                                      <FiTerminal /> Перейти
+                                    </button>
+                                  </TaskLink>
+                                )}
+                                {item.type === "quiz" && (
+                                  <>
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        openTestModal(item.id);
+                                      }}
+                                      className="btn btn-sm btn-info gap-2 min-w-[120px]"
+                                    >
+                                      <FiCheckSquare /> Тест
+                                    </button>
+                                    <QuizModal
+                                      quizId={item.id}
+                                      isOpen={testModalStates[item.id] || false}
+                                      onClose={() => closeTestModal(item.id)}
+                                      setModules={setModules}
+                                    />
+                                  </>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
-                    <button
-                        className="btn btn-xs btn-secondary ml-auto w-32"
-                        onClick={toggleAllModules}
-                    >
-                        {allExpanded ? "Свернуть всё" : "Развернуть всё"}
-                    </button>
-                </div>
+                  </div>
+                );
+              })
+            ) : (
+              <div className="text-center p-6 bg-base-100 rounded-xl">
+                <p className="text-gray-500">Нет модулей по выбранным фильтрам</p>
+              </div>
+            )}
+          </div>
+        </div>
 
-                {/* Темы */}
-                <div>
-                    {filteredModules.length > 0 ? (
-                        filteredModules.map((module) => {
-                            const progress = calculateProgress(module);
-                            const completedTasks = module.data.filter((row) => row.type === "task" && row.completed).length;
-                            const completedLectures = module.data.filter((row) => row.type === "lecture" && row.completed).length;
-                            const completedQuizzes = module.data.filter((row) => row.type === "quiz" && row.completed).length;
-                            const totalTasks = module.data.filter((row) => row.type === "task").length;
-                            const totalLectures = module.data.filter((row) => row.type === "lecture").length;
-                            const totalQuizzes = module.data.filter((row) => row.type === "quiz").length;
-
-                            return (
-                                <div
-                                    key={module.id}
-                                    className="mb-3 p-4 border border-base-300 bg-base-100 rounded-md shadow"
-                                >
-                                    <div className="flex justify-between items-center min-w-0 flex-grow gap-4">
-                                        <h2 className="text-lg font-bold flex-grow truncate ">{module.title}</h2>
-                                        <div className="flex items-center gap-4 shrink-0">
-                                            <div className="flex items-center gap-4 text-sm font-medium">
-                                                <div className="flex items-center gap-1">
-                                                    <span className="text-xl">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-6">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25" />
-                                                        </svg>
-                                                    </span>
-                                                    <span>
-                                                        {completedLectures}/{totalLectures}
-                                                    </span>
-                                                </div>
-                                                <div className="flex items-center gap-1">
-                                                    <span className="text-xl">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-6">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" d="m6.75 7.5 3 2.25-3 2.25m4.5 0h3m-9 8.25h13.5A2.25 2.25 0 0 0 21 18V6a2.25 2.25 0 0 0-2.25-2.25H5.25A2.25 2.25 0 0 0 3 6v12a2.25 2.25 0 0 0 2.25 2.25Z" />
-                                                        </svg>
-
-                                                    </span>
-                                                    <span>
-                                                        {completedTasks}/{totalTasks}
-                                                    </span>
-                                                </div>
-                                                <div className="flex items-center gap-1">
-                                                    <span className="text-xl">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-6">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
-                                                        </svg>
-                                                    </span>
-                                                    <span>
-                                                        {completedQuizzes}/{totalQuizzes}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                            <div className="w-32">
-                                                <div className="w-full bg-gray-200 rounded-full h-2">
-                                                    <div
-                                                        className="bg-primary h-2 rounded-full"
-                                                        style={{ width: `${progress}%` }}
-                                                    ></div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <button
-                                            className="btn btn-sm btn-outline w-24"
-                                            onClick={() => toggleModule(module.id)}
-                                        >
-                                            {expandedModules[module.id] ? "Свернуть" : "Развернуть"}
-                                        </button>
-                                    </div>
-
-                                    {expandedModules[module.id] && (
-                                        <div className="mt-4 space-y-2">
-                                            {module.data.map((item, index) => (
-                                                <div
-                                                    key={index}
-                                                    className="flex items-center p-4 rounded-md border border-base-300 shadow bg-base-100"
-                                                >
-                                                    <div
-                                                        className={`indicator ${item.completed ? "bg-blue-500" : "bg-gray-300"
-                                                            } w-3 h-3 rounded-full mr-4`}
-                                                    ></div>
-                                                    <div className="flex flex-grow items-center gap-1">
-                                                        {item.type === "task" && (
-                                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-6">
-                                                                <path strokeLinecap="round" strokeLinejoin="round" d="m6.75 7.5 3 2.25-3 2.25m4.5 0h3m-9 8.25h13.5A2.25 2.25 0 0 0 21 18V6a2.25 2.25 0 0 0-2.25-2.25H5.25A2.25 2.25 0 0 0 3 6v12a2.25 2.25 0 0 0 2.25 2.25Z" />
-                                                            </svg>
-                                                        )}
-                                                        {item.type === "lecture" && (
-                                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-6">
-                                                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25" />
-                                                            </svg>
-                                                        )}
-                                                        {item.type === "quiz" && (
-                                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-6">
-                                                                <path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
-                                                            </svg>
-                                                        )}
-                                                        <span>{item.title}</span>
-                                                    </div>
-                                                    {item.type === "lecture" && (
-                                                        <>
-                                                            <button
-                                                                onClick={() => openLectureModal(item.id)}
-                                                                className="btn btn-sm btn-primary w-24"
-                                                            >
-                                                                Открыть
-                                                            </button>
-                                                            <LectureModal
-                                                                lectureId={item.id}
-                                                                isOpen={lectureModalStates[item.id] || false}
-                                                                onClose={() => closeLectureModal(item.id)}
-                                                                setModules={setModules}
-                                                            />
-                                                        </>
-                                                    )}
-                                                    {item.type === "task" && (
-                                                        <TaskLink name={item.name} id={item.id}>
-                                                            <button className="btn btn-sm btn-accent w-24">
-                                                                Перейти
-                                                            </button>
-                                                        </TaskLink>
-                                                    )}
-                                                    {item.type === "quiz" && (
-                                                        <>
-                                                            <button
-                                                                onClick={() => openTestModal(item.id)}
-                                                                className="btn btn-sm btn-info w-24"
-                                                            >
-                                                                Пройти
-                                                            </button>
-                                                            <QuizModal
-                                                                quizId={item.id}
-                                                                isOpen={testModalStates[item.id] || false}
-                                                                onClose={() => closeTestModal(item.id)}
-                                                                setModules={setModules}
-                                                            />
-                                                        </>
-                                                    )}
-                                                </div>
-                                            ))}
-                                        </div>
-                                    )}
-                                </div>
-                            );
-                        })
-                    ) : (<p className="text-center text-gray-500 mt-8">Нет модулей по выбранным фильтрам.</p>)
-                    }
-                </div>
-            </div>
-
-            {/* Правая часть: Аналитика */}
-            <div className="col-span-4">
+        {/* Блок аналитики для десктопа */}
+        <div className="hidden lg:block lg:w-4/12 xl:w-3/12">
+          <div className="sticky top-4 space-y-4">
+            <div className="card bg-base-100 shadow-lg">
+              <div className="card-body">
+                <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+                  <FiPieChart className="text-primary" />
+                  Прогресс курса
+                </h3>
                 <CourseProgressStat modules={modules} />
+              </div>
             </div>
+          </div>
         </div>
-    );
+      </div>
+    </div>
+  );
 };
+
+// Компонент статистики курса
+const CourseProgressStat = ({ modules, isMobile }) => {
+  const data = modules.reduce(
+    (acc, module) => {
+      acc.totalLectures += module.data.filter(row => row.type === "lecture").length;
+      acc.completedLectures += module.data.filter(row => row.type === "lecture" && row.completed).length;
+      acc.totalTasks += module.data.filter(row => row.type === "task").length;
+      acc.completedTasks += module.data.filter(row => row.type === "task" && row.completed).length;
+      acc.totalQuizzes += module.data.filter(row => row.type === "quiz").length;
+      acc.completedQuizzes += module.data.filter(row => row.type === "quiz" && row.completed).length;
+      return acc;
+    },
+    {
+      completedLectures: 0,
+      totalLectures: 0,
+      completedTasks: 0,
+      totalTasks: 0,
+      completedQuizzes: 0,
+      totalQuizzes: 0
+    }
+  );
+
+  const calculatePercentage = (completed, total) =>
+    total === 0 ? 0 : Math.round((completed / total) * 100);
+
+  const lectureProgress = calculatePercentage(data.completedLectures, data.totalLectures);
+  const taskProgress = calculatePercentage(data.completedTasks, data.totalTasks);
+  const quizProgress = calculatePercentage(data.completedQuizzes, data.totalQuizzes);
+
+  return (
+    <div className={`space-y-4 ${isMobile ? 'px-2' : ''}`}>
+      <div className="flex items-center gap-4">
+        <div className="radial-progress text-primary"
+          style={{ "--value": calculatePercentage(data.completedLectures, data.totalLectures) }}>
+          {calculatePercentage(data.completedLectures, data.totalLectures)}%
+        </div>
+        <div>
+          <div className="font-medium">Лекции</div>
+          <div className="text-sm text-gray-500">
+            {data.completedLectures}/{data.totalLectures}
+          </div>
+        </div>
+      </div>
+
+      <div className="flex items-center gap-4">
+        <div className="radial-progress text-accent"
+          style={{ "--value": calculatePercentage(data.completedTasks, data.totalTasks) }}>
+          {calculatePercentage(data.completedTasks, data.totalTasks)}%
+        </div>
+        <div>
+          <div className="font-medium">Задания</div>
+          <div className="text-sm text-gray-500">
+            {data.completedTasks}/{data.totalTasks}
+          </div>
+        </div>
+      </div>
+
+      <div className="flex items-center gap-4">
+        <div className="radial-progress text-info"
+          style={{ "--value": calculatePercentage(data.completedQuizzes, data.totalQuizzes) }}>
+          {calculatePercentage(data.completedQuizzes, data.totalQuizzes)}%
+        </div>
+        <div>
+          <div className="font-medium">Тесты</div>
+          <div className="text-sm text-gray-500">
+            {data.completedQuizzes}/{data.totalQuizzes}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export default ModulesPage;
-
-const CourseProgressStat = ({ modules }) => {
-    const data = modules.reduce(
-        (acc, module) => {
-            // Обновляем количество завершенных и общих модулей
-            if (module.completed) acc.completedModules++;
-
-            // Обновляем статистику по лекциям
-            acc.totalLectures += module.data.filter((row) => row.type === "lecture").length;
-            acc.completedLectures += module.data.filter((row) => row.type === "lecture" && row.completed).length;
-
-            // Обновляем статистику по заданиям
-            acc.totalTasks += module.data.filter((row) => row.type === "task").length;
-            acc.completedTasks += module.data.filter((row) => row.type === "task" && row.completed).length;
-
-            // Обновляем статистику по тестам
-            acc.totalQuizzes += module.data.filter((row) => row.type === "quiz").length;
-            acc.completedQuizzes += module.data.filter((row) => row.type === "quiz" && row.completed).length;
-
-            return acc;
-        },
-        {
-            completedModules: 0,
-            totalLectures: 0,
-            completedLectures: 0,
-            totalTasks: 0,
-            completedTasks: 0,
-            totalQuizzes: 0,
-            completedQuizzes: 0,
-        }
-    );
-    data.totalModules = modules.length;
-    const calculatePercentage = (completed, total) =>
-        total === 0 ? 0 : Math.round((completed / total) * 100);
-
-    return (
-        <div className="stats shadow border border-base-300">
-
-            {/* Прогресс по лекциям */}
-            <div className="stat place-items-center">
-                <div className="stat-title">Лекции</div>
-                <div className="stat-value text-primary">
-                    {data.completedLectures}/{data.totalLectures}
-                </div>
-                <div className="stat-desc">
-                    {calculatePercentage(data.completedLectures, data.totalLectures)}% завершено
-                </div>
-            </div>
-            {/* Прогресс по заданиям */}
-            <div className="stat place-items-center">
-                <div className="stat-title">Задания</div>
-                <div className="stat-value text-accent">
-                    {data.completedTasks}/{data.totalTasks}
-                </div>
-                <div className="stat-desc">
-                    {calculatePercentage(data.completedTasks, data.totalTasks)}% завершено
-                </div>
-            </div>
-
-            {/* Прогресс по тестам */}
-            <div className="stat place-items-center">
-                {/* <div class="stat-figure text-primary">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-6">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25" />
-                        </svg>
-                    </div> */}
-                <div className="stat-title">Тесты</div>
-                <div className="stat-value text-info">
-                    {data.completedQuizzes}/{data.totalQuizzes}
-                </div>
-                <div className="stat-desc">
-                    {calculatePercentage(data.completedQuizzes, data.totalQuizzes)}% завершено
-                </div>
-            </div>
-        </div>
-    );
-};

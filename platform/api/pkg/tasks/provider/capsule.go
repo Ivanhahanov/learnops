@@ -79,6 +79,33 @@ func (capsule *Capsule) createTenant() error {
 			NamespaceOptions: &capsulev1beta2.NamespaceOptions{
 				Quota: &quota,
 			},
+			// NetworkPolicies: api.NetworkPolicySpec{
+			// 	Items: []v1.NetworkPolicySpec{
+			// 		// default deny all
+			// 		{
+			// 			PolicyTypes: []v1.PolicyType{
+			// 				"Egress",
+			// 				"Ingres",
+			// 			},
+			// 			PodSelector: metav1.LabelSelector{},
+			// 		},
+			// 		{
+			// 			PolicyTypes: []v1.PolicyType{
+			// 				"Egress",
+			// 			},
+			// 			PodSelector: metav1.LabelSelector{},
+			// 			Egress: []v1.NetworkPolicyEgressRule{
+			// 				{
+			// 					To: []v1.NetworkPolicyPeer{
+			// 						{
+			// 							NamespaceSelector: &metav1.LabelSelector{},
+			// 						},
+			// 					},
+			// 				},
+			// 			},
+			// 		},
+			// 	},
+			// },
 		},
 	}
 	if err := capsule.Client.Create(context.TODO(), tenant); err != nil {
@@ -208,10 +235,10 @@ func (capsule *Capsule) Deploy(manifest string) error {
 	return nil
 }
 
-func (capsule *Capsule) deleteTenant() error {
+func (capsule *Capsule) deleteTenant(name string) error {
 	tenant := &capsulev1beta2.Tenant{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: capsule.User.ID.String(),
+			Name: name,
 		},
 	}
 	if err := capsule.Client.Delete(context.TODO(), tenant); err != nil {
@@ -220,8 +247,8 @@ func (capsule *Capsule) deleteTenant() error {
 	return nil
 }
 
-func (capsule *Capsule) Destroy() error {
-	if err := capsule.deleteTenant(); err != nil {
+func (capsule *Capsule) Destroy(name string) error {
+	if err := capsule.deleteTenant(name); err != nil {
 		return err
 	}
 	return nil
