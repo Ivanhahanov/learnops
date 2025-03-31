@@ -71,11 +71,6 @@ const router = createBrowserRouter([
         path: "/oauth/callback",
         element: <OAuthCallback />,
     },
-    {
-        path: "/admin",
-        element: <AdminPanel />,
-    },
-    
     
 ]);
 
