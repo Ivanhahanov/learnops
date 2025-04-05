@@ -78,7 +78,7 @@ const Workspace = ({isMobile}) => {
         }
     }, []);
 
-    const tabs = ["Terminal", "IDE"];
+    const tabs = ["Terminal"];
     const tabsComponents = {
         "Terminal": <TerminalComponent uri={sandboxUri} />,
         // TODO: IDE functional if needed
@@ -109,7 +109,7 @@ const Workspace = ({isMobile}) => {
                       className={`tab ${active === type ? 'tab-active' : ''}`}
                       onClick={() => setActive(type)}
                     >
-                      {isMobile ? type.slice(0, 3) : type}
+                     {type}
                     </button>
                   ))}
                 </div>

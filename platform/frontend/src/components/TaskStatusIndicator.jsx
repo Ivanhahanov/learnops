@@ -2,6 +2,7 @@ import React from "react";
 import { useTask } from "../context/TaskContext";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/OAuthContext";
+import {} from 'react-icons'
 
 
 const TaskStatusIndicator = () => {
@@ -25,17 +26,17 @@ const TaskStatusIndicator = () => {
     const formatTime = (seconds) => {
         const hours = Math.floor(seconds / 3600);
         const minutes = Math.floor((seconds % 3600) / 60);
-      
+
         let formattedTime = '';
         if (hours > 0) {
-          formattedTime += `${hours}h`;
+            formattedTime += `${hours}h`;
         }
         if (minutes > 0) {
-          formattedTime += `${minutes}m`;
+            formattedTime += `${minutes}m`;
         }
-      
+
         return formattedTime || '0m';
-      }
+    }
     let navigate = useNavigate();
     const routeChange = () => {
         navigate(taskInfo.link);
@@ -43,7 +44,7 @@ const TaskStatusIndicator = () => {
     return (
         <>
             {taskInfo &&
-                <ul class="menu p-0 bg-base-100 menu-horizontal rounded-lg mx-2">
+                <ul className="menu p-0 bg-base-100 menu-horizontal rounded-lg">
                     <li>
                         <a onClick={routeChange}>
                             <span className={`badge badge-xs ${taskInfo.status === 'ready' ? 'badge-success' :
@@ -68,7 +69,7 @@ const TaskStatusIndicator = () => {
                                     <path d="m3.3 7l8.7 5l8.7-5M12 22V12" />
                                 </g>
                             </svg>
-                            {taskInfo.name}
+                            <span className="max-sm:hidden">{taskInfo.name}</span>
                             <svg
                                 role="img"
                                 xmlns="http://www.w3.org/2000/svg"
