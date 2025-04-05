@@ -1,3 +1,10 @@
+## [0.4.5](https://github.com/Ivanhahanov/learnops/compare/v0.4.4...v0.4.5) (2025-04-05)
+
+
+### Bug Fixes
+
+* edit svc urls ([975ed52](https://github.com/Ivanhahanov/learnops/commit/975ed52624d4ae43b40aeb9e995ea452adb197df))
+
 ## [0.4.4](https://github.com/Ivanhahanov/learnops/compare/v0.4.3...v0.4.4) (2025-04-05)
 
 
