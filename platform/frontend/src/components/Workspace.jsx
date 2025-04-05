@@ -98,7 +98,6 @@ const Workspace = ({isMobile}) => {
     }
     // If page is not in loading state, display page.
     else {
-        const btnBaseClassName = "join-item btn btn-xs hover:bg-base-content hover:text-base-100"
         return (
             <>
               <div className="flex justify-between items-center p-2">

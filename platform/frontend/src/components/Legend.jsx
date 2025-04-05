@@ -223,7 +223,7 @@ export default Legend;
 
 const AlertPortal = ({ children }) => {
     return createPortal(
-        <div className="alert alert-warning shadow-lg fixed top-4 left-1/2 transform -translate-x-1/2 w-1/3 z-50" role="alert">
+        <div className="alert alert-warning shadow-lg fixed top-4 left-0 md:left-1/2 w-full md:w-1/3 md:transform md:-translate-x-1/2 z-50" role="alert">
             {children}
         </div>,
         document.body

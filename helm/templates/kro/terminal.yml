@@ -38,7 +38,7 @@ spec:
               annotations:
                 learnops/name: "Terminal"
                 learnops/description: "You're here"
-                learnops/ws: ${schema.spec.name}.${schema.metadata.namespace}.${schema.spec.domain}/xterm.js
+                learnops/ws: ${schema.spec.name}-${schema.metadata.namespace}.${schema.spec.domain}/xterm.js
             spec:
               containers:
                 - name: ${schema.spec.name}
@@ -46,7 +46,7 @@ spec:
                   ports:
                     - containerPort: 8376
                   args:
-                    - "--allowed-hostnames=${schema.spec.name}.${schema.metadata.namespace}.${schema.spec.domain}"
+                    - "--allowed-hostnames=${schema.spec.name}-${schema.metadata.namespace}.${schema.spec.domain}"
 
     - id: service
       template:
@@ -74,10 +74,10 @@ spec:
           ingressClassName: nginx
           tls:
             - hosts:
-              - ${schema.spec.name}.${schema.metadata.namespace}.${schema.spec.domain}
+              - ${schema.spec.name}-${schema.metadata.namespace}.${schema.spec.domain}
               secretName: ${schema.spec.name}-tls
           rules:
-            - host: ${schema.spec.name}.${schema.metadata.namespace}.${schema.spec.domain}
+            - host: ${schema.spec.name}-${schema.metadata.namespace}.${schema.spec.domain}
               http:
                 paths:
                   - path: "/"
