@@ -30,7 +30,7 @@ const Header = () => {
               LearnOps
             </span>
           </Link>
-          
+
           {user && (
             <div className="hidden sm:flex">
               <Link to="/courses" className="btn btn-ghost">
@@ -42,7 +42,9 @@ const Header = () => {
 
         {/* Правая часть */}
         <div className="flex-none gap-2">
-          <TaskStatusIndicator />
+          <div className="max-sm:mr-2">
+            <TaskStatusIndicator />
+          </div>
 
           {/* Переключатель темы */}
           <label className="swap swap-rotate btn btn-ghost btn-circle">
@@ -60,7 +62,7 @@ const Header = () => {
             >
               {isMobileMenuOpen ? <FiX className="text-xl" /> : <FiMenu className="text-xl" />}
             </label>
-            
+
             {/* Выпадающее меню */}
             {isMobileMenuOpen && (
               <div className="dropdown-content mt-3 p-2 shadow-xl bg-base-100 rounded-box w-52 absolute right-0">
@@ -77,7 +79,7 @@ const Header = () => {
                       </div>
                     </div>
                     <div className="divider my-0" />
-                    
+
                     <Link
                       to="/courses"
                       className="btn btn-ghost justify-start w-full"
@@ -85,7 +87,7 @@ const Header = () => {
                     >
                       Courses
                     </Link>
-                    
+
                     <button
                       onClick={logout}
                       className="btn btn-ghost text-error justify-start w-full gap-2"
