@@ -1,3 +1,10 @@
+## [0.4.4](https://github.com/Ivanhahanov/learnops/compare/v0.4.3...v0.4.4) (2025-04-05)
+
+
+### Bug Fixes
+
+* mobile status indicator ([95b1d38](https://github.com/Ivanhahanov/learnops/commit/95b1d38d5bf0031226323717040f2831599a50a2))
+
 ## [0.4.3](https://github.com/Ivanhahanov/learnops/compare/v0.4.2...v0.4.3) (2025-04-05)
 
 
