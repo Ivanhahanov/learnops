@@ -1,8 +1,6 @@
 import React from 'react'
 import ReactMarkdown from 'react-markdown'
-import remarkGfm from 'remark-gfm'
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
-import { atomDark } from 'react-syntax-highlighter/dist/cjs/styles/prism'
+import { createPortal } from 'react-dom';
 import 'font-awesome/css/font-awesome.min.css';
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
@@ -15,12 +13,12 @@ import { FiCopy, FiCheck } from 'react-icons/fi';
 
 
 const Pre = ({ children }) => (
-        <div className="relative ">
-            <pre className="font-mono text-sm p-4 pr-12 rounded-lg overflow-x-auto bg-neutral text-neutral-content">
-                {children}
-            </pre>
-            <CodeCopyBtn>{children}</CodeCopyBtn>
-        </div>
+    <div className="relative ">
+        <pre className="font-mono text-sm p-4 pr-12 rounded-lg overflow-x-auto bg-neutral text-neutral-content">
+            {children}
+        </pre>
+        <CodeCopyBtn>{children}</CodeCopyBtn>
+    </div>
 );
 
 function CodeCopyBtn({ children }) {
@@ -114,7 +112,7 @@ const Legend = ({ onClose, isMobile }) => {
                         onClick={handleSubmit}
                         className="btn btn-error btn-sm gap-2"
                     >
-                        <MdClose className="" />
+                        {/* <MdClose className="" /> */}
                         <span>Close Session</span>
                     </button>
 
@@ -196,10 +194,7 @@ function VerifyButton({ name, user }) {
 
             {/* Alert */}
             {alertMessage && (
-                <div
-                    role="alert"
-                    className="alert alert-warning shadow-lg fixed top-4 left-1/2 transform -translate-x-1/2 z-1 w-1/3"
-                >
+                <AlertPortal>
                     <div className="flex items-center">
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -217,10 +212,20 @@ function VerifyButton({ name, user }) {
                         </svg>
                         <span>{alertMessage}</span>
                     </div>
-                </div>
+                </AlertPortal>
             )}
         </div>
     );
 }
 
 export default Legend;
+
+
+const AlertPortal = ({ children }) => {
+    return createPortal(
+        <div className="alert alert-warning shadow-lg fixed top-4 left-1/2 transform -translate-x-1/2 w-1/3 z-50" role="alert">
+            {children}
+        </div>,
+        document.body
+    );
+};

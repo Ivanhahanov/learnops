@@ -247,7 +247,7 @@ const ModulesPage = () => {
 
                       {expandedModules[module.id] && (
                         <div
-                          className="mt-4 space-y-3 border-t pt-4"
+                          className="mt-4 space-y-3 pt-4"
                           onClick={(e) => e.stopPropagation()}
                         >
                           {module.data.map((item, index) => (
