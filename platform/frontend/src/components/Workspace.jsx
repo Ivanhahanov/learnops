@@ -81,12 +81,13 @@ const Workspace = ({isMobile}) => {
     const tabs = ["Terminal", "IDE"];
     const tabsComponents = {
         "Terminal": <TerminalComponent uri={sandboxUri} />,
-        "IDE": <IDE />
+        // TODO: IDE functional if needed
+        // "IDE": <IDE />
     };
 
     const [active, setActive] = useState(tabs[0]);
 
-    if (sandboxStatus !== "ready") {
+    if (sandboxStatus === "ready") {
         return (
             <div className="flex flex-col items-center justify-center h-[calc(100vh-5em)] skeleton">
                 <span className="loading loading-spinner loading-lg"></span>
@@ -100,7 +101,7 @@ const Workspace = ({isMobile}) => {
         const btnBaseClassName = "join-item btn btn-xs hover:bg-base-content hover:text-base-100"
         return (
             <>
-              <div className="flex justify-between items-center p-2 border-b">
+              <div className="flex justify-between items-center p-2">
                 <div className="tabs tabs-boxed tabs-sm">
                   {tabs.map(type => (
                     <button

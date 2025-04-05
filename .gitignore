@@ -6,6 +6,7 @@
 
 # Hugo output
 public/
+!platform/frontend/public
 resources/
 .hugo_build.lock
 
