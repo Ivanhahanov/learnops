@@ -1,3 +1,10 @@
+## [0.4.3](https://github.com/Ivanhahanov/learnops/compare/v0.4.2...v0.4.3) (2025-04-05)
+
+
+### Bug Fixes
+
+* update alert message and add default image ([9cac975](https://github.com/Ivanhahanov/learnops/commit/9cac975dea33dc50a11ae1bfc91371dc10e64308))
+
 ## [0.4.2](https://github.com/Ivanhahanov/learnops/compare/v0.4.1...v0.4.2) (2025-03-31)
 
 
