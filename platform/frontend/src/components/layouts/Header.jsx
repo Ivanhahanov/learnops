@@ -21,7 +21,7 @@ const Header = () => {
   }, []);
 
   return (
-    <header className="sticky top-0 z-10 bg-base-100/90 backdrop-blur border-b border-base-200">
+    <header className="sticky top-0 z-50 bg-base-100/90 backdrop-blur border-b border-base-200">
       <nav className="navbar mx-auto px-4">
         {/* Левая часть с лого и Courses */}
         <div className="flex-1 flex items-center gap-4">

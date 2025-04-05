@@ -78,8 +78,8 @@ const TerminalComponent = ({ uri }) => {
 
 
   return (
-    <div className="card bg-black mx-2 rounded-xl">
-      <div className="h-[calc(100vh-7.5em)] overflow-y-auto" ref={terminalRef}></div>
+    <div className="card bg-black mx-2 p-2 rounded-xl">
+      <div className="h-[calc(100vh-8.7em)] overflow-y-auto" ref={terminalRef}></div>
     </div>
   );
 }
